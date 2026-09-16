@@ -21,19 +21,13 @@ import java.io.IOException;
 import java.util.List;
 
 public class JwtTokenValidator extends OncePerRequestFilter {
-
-    private final SecretKey key;
-
-    public JwtTokenValidator(SecretKey key) {
-        this.key = key;
-    }
-
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String jwt = request.getHeader("Authorization");
         if (jwt != null) {
             jwt = jwt.substring(7);
             try {
+                SecretKey key = Keys.hmacShaKeyFor(JWT_CONSTANT.SECRET_KEY.getBytes());
                 Claims claims = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(jwt).getBody();
                 String email = String.valueOf(claims.get("email"));
                 String authorities = String.valueOf(claims.get("authorities"));
