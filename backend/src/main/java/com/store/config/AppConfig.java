@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -32,8 +33,12 @@ public class AppConfig  {
         http.sessionManagement(management -> management.sessionCreationPolicy(
                 SessionCreationPolicy.STATELESS
         )).authorizeHttpRequests(authorize -> authorize
-                .requestMatchers("/api/**").authenticated()
                 .requestMatchers("/api/products/*/reviews").permitAll()
+                .requestMatchers(HttpMethod.DELETE, "/sellers/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PATCH, "/sellers").authenticated()
+                .requestMatchers("/admin/deals/**").hasRole("ADMIN")
+                .requestMatchers("/sellers/products/**").hasRole("SELLER")
+                .requestMatchers("/api/**").authenticated()
                 .anyRequest().permitAll()
         ).addFilterBefore(new JwtTokenValidator(jwtSigningKey), BasicAuthenticationFilter.class)
                 .csrf(csrf -> csrf.disable())
