@@ -3,6 +3,8 @@ package com.store.config;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
@@ -16,7 +18,15 @@ import java.util.Set;
 @Service
 public class JwtProvider {
 
-    SecretKey key = Keys.hmacShaKeyFor(JWT_CONSTANT.SECRET_KEY.getBytes());
+    @Value("${jwt.secret}")
+    private String jwtSecret;
+
+    private SecretKey key;
+
+    @PostConstruct
+    private void init() {
+        this.key = Keys.hmacShaKeyFor(jwtSecret.getBytes());
+    }
 
     public String generateToken(Authentication auth) {
         Collection<? extends GrantedAuthority> authorities = auth.getAuthorities();
