@@ -44,14 +44,25 @@ public class SellerProductController {
     }
 
     @DeleteMapping("/{productId}")
-    public ResponseEntity<Void> deleteProduct(@PathVariable Long productId) throws ProductException {
+    public ResponseEntity<Void> deleteProduct(@PathVariable Long productId,
+                                              @RequestHeader("Authorization") String jwt) throws Exception {
+        Product existingProduct = productService.findProductById(productId);
+        Seller seller = sellerService.getSellerProfile(jwt);
+        if (!existingProduct.getSeller().getId().equals(seller.getId())) {
+            throw new SellerException("You do not own this product");
+        }
         productService.deleteProduct(productId);
         return new ResponseEntity<>(HttpStatus.OK);
-
     }
 
     @PutMapping("/{productId}")
-    public ResponseEntity<Product> updateProduct(@PathVariable Long productId, @RequestBody Product product) throws ProductException {
+    public ResponseEntity<Product> updateProduct(@PathVariable Long productId, @RequestBody Product product,
+                                                 @RequestHeader("Authorization") String jwt) throws Exception {
+        Product existingProduct = productService.findProductById(productId);
+        Seller seller = sellerService.getSellerProfile(jwt);
+        if (!existingProduct.getSeller().getId().equals(seller.getId())) {
+            throw new SellerException("You do not own this product");
+        }
         Product updatedProduct = productService.updateProduct(productId, product);
         return new ResponseEntity<>(updatedProduct, HttpStatus.OK);
     }
