@@ -10,6 +10,7 @@ import com.store.repository.AddressRepository;
 import com.store.repository.SellerRepository;
 import com.store.service.SellerService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -133,6 +134,7 @@ public class SellerServiceImpl implements SellerService {
         return sellerRepository.save(seller);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @Override
     public Seller updateSellerAccountStatus(Long sellerId, AccountStatus status) throws Exception {
         Seller seller = getSellerById(sellerId);
