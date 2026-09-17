@@ -2,6 +2,7 @@ package com.store.controller;
 
 import com.razorpay.PaymentLink;
 import com.store.domain.PaymentMethod;
+import com.store.domain.USER_ROLE;
 import com.store.model.*;
 import com.store.repository.PaymentOrderRepository;
 import com.store.response.PaymentLinkResponse;
@@ -73,10 +74,13 @@ public class OrderController {
 
     @GetMapping("/{orderId}")
     public ResponseEntity<Order> getOrderById(@PathVariable Long orderId,
-                  @RequestHeader("Authorization") String jwt) throws Exception {
+                                              @RequestHeader("Authorization") String jwt) throws Exception {
 
         User user = userService.findUserByJwtToken(jwt);
         Order orders = orderService.findOrderById(orderId);
+        if (!orders.getUser().getId().equals(user.getId()) && user.getRole() != USER_ROLE.ROLE_ADMIN) {
+            throw new Exception("You don't have permission to view this order");
+        }
         return new ResponseEntity<>(orders, HttpStatus.ACCEPTED);
     }
 
@@ -86,6 +90,9 @@ public class OrderController {
     ) throws Exception {
         User user = userService.findUserByJwtToken(jwt);
         OrderItem orderItem = orderService.getOrderItemById(orderItemId);
+        if (!orderItem.getOrder().getUser().getId().equals(user.getId()) && user.getRole() != USER_ROLE.ROLE_ADMIN) {
+            throw new Exception("You don't have permission to view this order item");
+        }
         return new ResponseEntity<>(orderItem, HttpStatus.ACCEPTED);
     }
 
