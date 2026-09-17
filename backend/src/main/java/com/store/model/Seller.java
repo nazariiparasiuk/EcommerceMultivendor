@@ -1,5 +1,6 @@
 package com.store.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.store.domain.AccountStatus;
 import com.store.domain.USER_ROLE;
 import jakarta.persistence.*;
@@ -24,6 +25,7 @@ public class Seller {
     @Column(unique = true, nullable = false)
     private String email;
 
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
     @Embedded

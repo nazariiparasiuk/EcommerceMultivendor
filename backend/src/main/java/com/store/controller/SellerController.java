@@ -10,6 +10,7 @@ import com.store.repository.VerificationCodeRepository;
 import com.store.request.LoginRequest;
 import com.store.response.ApiResponse;
 import com.store.response.AuthResponse;
+import com.store.response.SellerResponse;
 import com.store.service.AuthService;
 import com.store.service.EmailService;
 import com.store.service.SellerReportService;
@@ -21,6 +22,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
@@ -47,7 +49,7 @@ public class SellerController {
     }
 
     @PatchMapping("/verify/{otp}")
-    public ResponseEntity<Seller> verifySellerEmail(@PathVariable String otp) throws Exception {
+    public ResponseEntity<SellerResponse> verifySellerEmail(@PathVariable String otp) throws Exception {
 
         VerificationCode verificationCode = verificationCodeRepository.findByOtp(otp);
 
@@ -56,16 +58,15 @@ public class SellerController {
         }
 
         Seller seller = sellerService.verifyEmail(verificationCode.getEmail(), otp);
-        return new ResponseEntity<>(seller, HttpStatus.OK);
+        return new ResponseEntity<>(SellerResponse.fromSeller(seller), HttpStatus.OK);
     }
 
     @PostMapping
-    public ResponseEntity<Seller> createSeller(@RequestBody Seller seller) throws Exception {
+    public ResponseEntity<SellerResponse> createSeller(@RequestBody Seller seller) throws Exception {
 
         Seller savedSeller = sellerService.createSeller(seller);
 
         String otp = OtpUtil.generateOtp();
-//        VerificationCode verificationCode = verificationService.createVerificationCode(otp, seller.getEmail());
 
         VerificationCode verificationCode = new VerificationCode();
         verificationCode.setOtp(otp);
@@ -77,19 +78,19 @@ public class SellerController {
         String text = "Welcome to Ecommerce Multivendor. Verify your account using this link ";
         String frontend_url = "http://localhost:3000/verify-seller/";
         emailService.sendVerificationEmail(seller.getEmail(), verificationCode.getOtp(), subject, text + frontend_url);
-        return new ResponseEntity<>(savedSeller, HttpStatus.CREATED);
+        return new ResponseEntity<>(SellerResponse.fromSeller(savedSeller), HttpStatus.CREATED);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Seller> getSellerById(@PathVariable Long id) throws SellerException {
+    public ResponseEntity<SellerResponse> getSellerById(@PathVariable Long id) throws SellerException {
         Seller seller = sellerService.getSellerById(id);
-        return new ResponseEntity<>(seller, HttpStatus.OK);
+        return new ResponseEntity<>(SellerResponse.fromSeller(seller), HttpStatus.OK);
     }
 
     @GetMapping("/profile")
-    public ResponseEntity<Seller> getSellerByJwt(@RequestHeader("Authorization") String jwt) throws Exception {
+    public ResponseEntity<SellerResponse> getSellerByJwt(@RequestHeader("Authorization") String jwt) throws Exception {
         Seller seller = sellerService.getSellerProfile(jwt);
-        return new ResponseEntity<>(seller, HttpStatus.OK);
+        return new ResponseEntity<>(SellerResponse.fromSeller(seller), HttpStatus.OK);
     }
 
     @GetMapping("/report")
@@ -100,17 +101,20 @@ public class SellerController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Seller>> getAllSellers(@RequestParam(required = false) AccountStatus status) {
+    public ResponseEntity<List<SellerResponse>> getAllSellers(@RequestParam(required = false) AccountStatus status) {
 
         List<Seller> sellers = sellerService.getAllSellers(status);
-        return ResponseEntity.ok(sellers);
+        List<SellerResponse> response = sellers.stream()
+                .map(SellerResponse::fromSeller)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(response);
     }
 
     @PatchMapping()
-    public ResponseEntity<Seller> updateSeller(@RequestHeader("Authorization") String jwt, @RequestBody Seller seller) throws Exception {
+    public ResponseEntity<SellerResponse> updateSeller(@RequestHeader("Authorization") String jwt, @RequestBody Seller seller) throws Exception {
         Seller profile = sellerService.getSellerProfile(jwt);
         Seller updatedSeller = sellerService.updateSeller(profile.getId(), seller);
-        return ResponseEntity.ok(updatedSeller);
+        return ResponseEntity.ok(SellerResponse.fromSeller(updatedSeller));
     }
 
     @DeleteMapping("/{id}")
