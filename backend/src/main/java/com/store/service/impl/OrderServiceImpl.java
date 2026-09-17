@@ -102,7 +102,7 @@ public class OrderServiceImpl implements OrderService {
     public Order cancelOrder(Long orderId, User user) throws Exception {
         Order order = findOrderById(orderId);
 
-        if(user.getId().equals(order.getUser().getId())) {
+        if(!user.getId().equals(order.getUser().getId())) {
             throw new Exception("You don't have permission to update this order");
         }
 
