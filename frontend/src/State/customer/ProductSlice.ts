@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { api } from "../../config/Api";
-import { Product } from "../../types/ProductTypes";
+import { Product, FilterOptions } from "../../types/ProductTypes";
 import { create } from "domain";
 
 const API_URL = "/products";
@@ -52,6 +52,21 @@ export const fetchAllProducts = createAsyncThunk<any,any>("products/fetchAllProd
     }
 )
 
+export const fetchFilterOptions = createAsyncThunk<FilterOptions, {category?: string, color?: string, minPrice?: number, maxPrice?: number}>("products/fetchFilterOptions",
+    async (params, {rejectWithValue}) => {
+        try {
+            const response = await api.get(`${API_URL}/filters`, {params});
+
+            const data = response.data;
+            console.log("Filter options: ", data);
+            return data;
+        } catch (error:any) {
+            console.log("error: " + error);
+            return rejectWithValue(error.message);
+        }
+    }
+)
+
 interface ProductState {
     product: Product | null;
     products: Product[];
@@ -59,6 +74,7 @@ interface ProductState {
     loading: boolean;
     error: string | null | undefined | any;
     searchProduct: Product[];
+    filterOptions: FilterOptions;
 }
 
 const initialState: ProductState = {
@@ -68,6 +84,7 @@ const initialState: ProductState = {
     loading: false,
     error: null,
     searchProduct: [],
+    filterOptions: {colors: [], minPrice: 0, maxPrice: 0},
 }
 
 const productSlice = createSlice({
@@ -93,6 +110,7 @@ const productSlice = createSlice({
         builder.addCase(fetchAllProducts.fulfilled, (state, action) => {
             state.loading = false;
             state.products = action.payload.content;
+            state.totalPages = action.payload.totalPages;
         });
         builder.addCase(fetchAllProducts.rejected, (state, action) => {
             state.loading = false;
@@ -107,6 +125,18 @@ const productSlice = createSlice({
             state.searchProduct = action.payload;
         });
         builder.addCase(searchProduct.rejected, (state, action) => {
+            state.loading = false;
+            state.error = action.payload;
+        });
+
+        builder.addCase(fetchFilterOptions.pending, (state) => {
+            state.loading = true;
+        });
+        builder.addCase(fetchFilterOptions.fulfilled, (state, action) => {
+            state.loading = false;
+            state.filterOptions = action.payload;
+        });
+        builder.addCase(fetchFilterOptions.rejected, (state, action) => {
             state.loading = false;
             state.error = action.payload;
         });

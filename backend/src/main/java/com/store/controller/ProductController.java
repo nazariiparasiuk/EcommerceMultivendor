@@ -2,6 +2,7 @@ package com.store.controller;
 
 import com.store.exception.ProductException;
 import com.store.model.Product;
+import com.store.response.ProductFilterOptions;
 import com.store.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -47,5 +48,16 @@ public class ProductController {
                 productService.getAllProducts(category, brand, color, size, minPrice, maxPrice,
                         minDiscount, sort, stock, pageNumber), HttpStatus.OK
         );
+    }
+
+    @GetMapping("/filters")
+    public ResponseEntity<ProductFilterOptions> getFilterOptions(
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String color,
+            @RequestParam(required = false) Integer minPrice,
+            @RequestParam(required = false) Integer maxPrice
+    ) {
+        ProductFilterOptions options = productService.getFilterOptions(category, color, minPrice, maxPrice);
+        return new ResponseEntity<>(options, HttpStatus.OK);
     }
 }

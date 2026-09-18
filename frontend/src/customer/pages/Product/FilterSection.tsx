@@ -1,16 +1,39 @@
-import { Button, Divider, FormControl, FormControlLabel, FormLabel, Radio, RadioGroup } from '@mui/material'
+import { Button, Divider, FormControl, FormControlLabel, FormLabel, Radio, RadioGroup, Slider } from '@mui/material'
 import { teal } from '@mui/material/colors'
-import React, { useState } from 'react'
-import { colors } from '../../../data/Filter/color'
-import { useSearchParams } from 'react-router-dom'
-import { discount } from '../../../data/Filter/discount'
-import { price } from '../../../data/Filter/price'
+import React, { useEffect, useState } from 'react'
+import { useParams, useSearchParams } from 'react-router-dom'
+import { useAppDispatch, useAppSelector } from '../../../State/Store'
+import { fetchFilterOptions } from '../../../State/customer/ProductSlice'
 
 const FilterSection = () => {
-  const [expendColor, setExpendColor] = useState(false);
+  const dispatch = useAppDispatch();
   const [searchParams, setSearchParams] = useSearchParams();
-  const handleColorToggle = () => {
-    setExpendColor(!expendColor); }
+  const { category } = useParams();
+  const { product } = useAppSelector((store) => store);
+  const { filterOptions } = product;
+
+  const [priceRange, setPriceRange] = useState<number[]>([0, 0]);
+
+  useEffect(() => {
+    const priceParam = searchParams.get("price");
+    const [minPrice, maxPrice] = priceParam ? priceParam.split("-").map(Number) : [undefined, undefined];
+    dispatch(fetchFilterOptions({
+      category,
+      color: searchParams.get("color") || undefined,
+      minPrice,
+      maxPrice,
+    }));
+  }, [category, searchParams]);
+
+  useEffect(() => {
+    const priceParam = searchParams.get("price");
+    if (priceParam) {
+      setPriceRange(priceParam.split("-").map(Number));
+    } else {
+      setPriceRange([filterOptions.minPrice, filterOptions.maxPrice]);
+    }
+  }, [filterOptions]);
+
   const updateFilterParams = (e: any) => {
     const { value, name } = e.target;
     if (value) {
@@ -21,14 +44,19 @@ const FilterSection = () => {
     setSearchParams(searchParams);
   };
 
+  const handlePriceCommit = (event: Event | React.SyntheticEvent, newValue: number | number[]) => {
+    const [min, max] = newValue as number[];
+    searchParams.set("price", `${min}-${max}`);
+    setSearchParams(searchParams);
+  };
+
   const clearAllFilters = () => {
-    console.log("clearAllFilters",searchParams)
     searchParams.forEach((value: any, key: any) => {
       searchParams.delete(key);
     });
     setSearchParams(searchParams);
-  };  
-  
+  };
+
   return (
     <div className='-z-50 space-y-5 bg-white'>
       <div className='flex items-center justify-between h-[40px] px-9 lg:border-r'>
@@ -47,37 +75,22 @@ const FilterSection = () => {
               fontWeight: 'bold',
               color: teal[500],
               pb: '14px',
-            }} 
+            }}
             className='text-2xl font-semibold' id='color'>Color</FormLabel>
             <RadioGroup
               aria-labelledby="color"
-              defaultValue=""
+              value={searchParams.get("color") || ""}
               name="color"
               onChange={updateFilterParams}
             >
-              {colors.slice(0, expendColor?colors.length:5).map((item) => 
-              <FormControlLabel value={item.name} control={<Radio />} 
-              label={<div className='flex items-center gap-3'>
-                <p>{item.name}</p>
-                <p style={{backgroundColor:item.hex}} 
-                className={`h-5 w-5 rounded-full ${item.name === "White" ? "border" : ""}`}>
-                  
-                </p>
-              </div>} />)}
-              
+              {filterOptions.colors.map((color) =>
+              <FormControlLabel key={color} value={color} control={<Radio />} label={color} />)}
             </RadioGroup>
           </FormControl>
-          <div>
-            <button 
-            onClick={handleColorToggle}
-            className='text-primary-color cursor-pointer hover:text-teal-900
-            flex items-center'>
-              {expendColor ? "hide" : `${colors.length - 5} more`}
-            </button>
-          </div>
         </section>
+        <Divider/>
         <section>
-          <FormControl>
+          <FormControl fullWidth>
             <FormLabel
               sx={{
                 fontSize: "16px",
@@ -88,55 +101,18 @@ const FilterSection = () => {
               className="text-2xl font-semibold"
               id="price"
             >
-              Price
+              Price: $ {priceRange[0]} - $ {priceRange[1]}
             </FormLabel>
-            <RadioGroup
-              name="price"
-              onChange={updateFilterParams}
-              aria-labelledby="price"
-              defaultValue=""
-            >
-              {price.map((item, index) => (
-                <FormControlLabel
-                  key={item.name}
-                  value={item.value}
-                  control={<Radio size="small" />}
-                  label={item.name}
-                />
-              ))}
-            </RadioGroup>
-          </FormControl>
-        </section>
-        <Divider />
-        <section>
-          <FormControl>
-            <FormLabel
-              sx={{
-                fontSize: "16px",
-                fontWeight: "bold",
-                pb: "14px",
-                color: teal[600],
-              }}
-              className="text-2xl font-semibold"
-              id="brand"
-            >
-              Discount
-            </FormLabel>
-            <RadioGroup
-              name="discount"
-              onChange={updateFilterParams}
-              aria-labelledby="brand"
-              defaultValue=""
-            >
-              {discount.map((item, index) => (
-                <FormControlLabel
-                  key={item.name}
-                  value={item.value}
-                  control={<Radio size="small" />}
-                  label={item.name}
-                />
-              ))}
-            </RadioGroup>
+            <Slider
+              value={priceRange}
+              onChange={(e, newValue) => setPriceRange(newValue as number[])}
+              onChangeCommitted={handlePriceCommit}
+              onClick={(e) => e.stopPropagation()}
+              min={filterOptions.minPrice}
+              max={filterOptions.maxPrice}
+              valueLabelDisplay="auto"
+              sx={{ mx: 1, width: "90%" }}
+            />
           </FormControl>
         </section>
       </div>
