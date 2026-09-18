@@ -4,6 +4,7 @@ import com.store.exception.ProductException;
 import com.store.model.Product;
 import com.store.model.Seller;
 import com.store.request.CreateProductRequest;
+import com.store.response.ProductFilterOptions;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
@@ -22,4 +23,5 @@ public interface ProductService {
                                  String stock, Integer pageNumber
                                  );
     List<Product> getProductBySellerId(Long sellerId);
+    ProductFilterOptions getFilterOptions(String category, String color, Integer minPrice, Integer maxPrice);
 }

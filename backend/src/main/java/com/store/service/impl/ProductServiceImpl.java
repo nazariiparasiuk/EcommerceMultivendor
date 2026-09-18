@@ -7,6 +7,7 @@ import com.store.model.Category;
 import com.store.repository.CategoryRepository;
 import com.store.repository.ProductRepository;
 import com.store.request.CreateProductRequest;
+import com.store.response.ProductFilterOptions;
 import com.store.service.ProductService;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -164,5 +166,54 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public List<Product> getProductBySellerId(Long sellerId) {
         return productRepository.findBySellerId(sellerId);
+    }
+
+    @Override
+    public ProductFilterOptions getFilterOptions(String category, String color, Integer minPrice, Integer maxPrice) {
+        List<String> leafCategoryIds = category != null ? collectLeafCategoryIds(category) : null;
+
+        Specification<Product> colorsSpec = (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            if(leafCategoryIds != null) {
+                if(leafCategoryIds.isEmpty()) {
+                    predicates.add(criteriaBuilder.disjunction());
+                } else {
+                    predicates.add(root.join("category").get("categoryId").in(leafCategoryIds));
+                }
+            }
+            if(minPrice != null) {
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("sellingPrice"), minPrice));
+            }
+            if(maxPrice != null) {
+                predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("sellingPrice"), maxPrice));
+            }
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
+        List<String> colors = productRepository.findAll(colorsSpec).stream()
+                .map(Product::getColor)
+                .filter(c -> c != null && !c.isBlank())
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+
+        Specification<Product> priceSpec = (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            if(leafCategoryIds != null) {
+                if(leafCategoryIds.isEmpty()) {
+                    predicates.add(criteriaBuilder.disjunction());
+                } else {
+                    predicates.add(root.join("category").get("categoryId").in(leafCategoryIds));
+                }
+            }
+            if(color != null && !color.isEmpty()) {
+                predicates.add(criteriaBuilder.equal(criteriaBuilder.lower(root.get("color")), color.toLowerCase()));
+            }
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
+        List<Product> priceScopedProducts = productRepository.findAll(priceSpec);
+        int minSellingPrice = priceScopedProducts.stream().mapToInt(Product::getSellingPrice).min().orElse(0);
+        int maxSellingPrice = priceScopedProducts.stream().mapToInt(Product::getSellingPrice).max().orElse(0);
+
+        return new ProductFilterOptions(colors, minSellingPrice, maxSellingPrice);
     }
 }

@@ -38,11 +38,12 @@ const Product = () => {
       minPrice: minPrice?Number(minPrice):undefined,
       maxPrice: maxPrice?Number(maxPrice):undefined,
       minDiscount,
+      sort,
       pageNumber
     }
 
-    dispatch(fetchAllProducts(newFilter)) 
-  },[category, searchParams])
+    dispatch(fetchAllProducts(newFilter))
+  },[category, searchParams, sort, page])
 
   return (
     <div className='-z-10 mt-10'>
@@ -91,7 +92,7 @@ const Product = () => {
           </section>
           <div className='flex justify-center py-10'>
             <Pagination onChange={(e,value) => handlePageChange(value)}
-            count={10} variant='outlined' color='primary'/>
+              count={product.totalPages} page={page} variant='outlined' color='primary'/>
           </div>
         </div>
       </div>

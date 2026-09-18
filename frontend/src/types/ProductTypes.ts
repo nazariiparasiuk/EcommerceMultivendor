@@ -24,3 +24,9 @@ export interface Category {
     parentCategory?: Category;
     level: number;
   }
+
+export interface FilterOptions {
+  colors: string[];
+  minPrice: number;
+  maxPrice: number;
+}
