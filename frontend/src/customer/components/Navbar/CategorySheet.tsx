@@ -14,20 +14,27 @@ const CategorySheet = ({selectedCategory, setShowSheet}:any) => {
     (c) => c.level === 3 && c.parentCategory?.categoryId === parentCategoryId
   );
 
+  const accentStyles: {[key:string]: {heading: string, hoverText: string}} = {
+    clothing: { heading: 'text-rose-ink', hoverText: 'hover:text-rose-ink' },
+    electronics: { heading: 'text-primary-color', hoverText: 'hover:text-primary-color' },
+    home_goods: { heading: 'text-amber-ink', hoverText: 'hover:text-amber-ink' },
+  };
+  const accent = accentStyles[selectedCategory] || { heading: 'text-primary-color', hoverText: 'hover:text-primary-color' };
+
   return (
     <Box sx={
       {zIndex: 1}
-    } className='bg-white shadow-lg lg:h-[500px] overflow-y-auto'>
+    } className='bg-white shadow-lg max-h-[500px] overflow-y-auto'>
       <div className='flex text-sm flex-wrap'>
         {
           levelTwo.map((item, index) =>
-          <div className={`p-8 lg:w-[20%] ${index%2==0 ? "bg-slate-50":"bg-white"}`}>
-            <p className='text-primary-color lg:mb-5 font-semibold'>{item.name}</p>
+          <div key={item.categoryId} className={`p-8 lg:w-56 ${index%2==0 ? "bg-slate-50":"bg-white"}`}>
+            <p className={`${accent.heading} lg:mb-5 font-semibold`}>{item.name}</p>
             <ul className='space-y-3'>
 
               {levelThreeFor(item.categoryId).map
-              ((leaf)=> <div>
-              <li onClick={()=>navigate("/products/"+leaf.categoryId)} className='hover:text-primary-color cursor-pointer'>
+              ((leaf)=> <div key={leaf.categoryId}>
+              <li onClick={()=>navigate("/products/"+leaf.categoryId)} className={`${accent.hoverText} cursor-pointer`}>
                 {leaf.name}
               </li>
               </div>)}
