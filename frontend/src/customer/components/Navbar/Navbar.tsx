@@ -14,6 +14,13 @@ const Navbar = () => {
     const isLarge = useMediaQuery(theme.breakpoints.up('lg'));
     const [selectedCategory, setSelectedCategory] = useState("men");
     const [showCategorySheet, setShowCategorySheet] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
+
+    const handleSearch = () => {
+        if (searchQuery.trim()) {
+            navigate(`/search?query=${encodeURIComponent(searchQuery.trim())}`);
+        }
+    };
     const navigate = useNavigate();
     const {auth} = useAppSelector(store => store);
     return (
@@ -45,9 +52,18 @@ const Navbar = () => {
                     </ul>
                 </div>
                 <div className='flex gap-1 lg:gap-6 items-center'>
-                    <IconButton>
-                        <SearchIcon/>
-                    </IconButton>
+                    <div className='flex items-center border rounded px-2'>
+                        <input
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                            placeholder='Search products...'
+                            className='outline-none text-sm py-1 w-[140px] lg:w-[200px]'
+                        />
+                        <IconButton onClick={handleSearch}>
+                            <SearchIcon/>
+                        </IconButton>
+                    </div>
 
                     {
                         auth.user ? <Button onClick={()=>navigate("/account/orders")} className='flex items-center gap-2'>
