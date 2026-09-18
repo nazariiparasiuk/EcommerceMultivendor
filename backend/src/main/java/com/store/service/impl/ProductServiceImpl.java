@@ -30,39 +30,21 @@ public class ProductServiceImpl implements ProductService {
     private final CategoryRepository categoryRepository;
 
     @Override
-    public Product createProduct(CreateProductRequest req, Seller seller) {
+    public Product createProduct(CreateProductRequest req, Seller seller) throws ProductException {
 
-        Category category1 = categoryRepository.findByCategoryId(req.getCategory());
-        if(category1 == null) {
-            Category category = new Category();
-            category.setCategoryId(req.getCategory());
-            category.setLevel(1);
-            category1 = categoryRepository.save(category);
+        Category category = categoryRepository.findByCategoryId(req.getCategory());
+        if(category == null) {
+            throw new ProductException("Category not found with categoryId " + req.getCategory());
         }
-
-        Category category2 = categoryRepository.findByCategoryId(req.getCategory2());
-        if(category2 == null) {
-            Category category = new Category();
-            category.setCategoryId(req.getCategory2());
-            category.setLevel(2);
-            category.setParentCategory(category1);
-            category2 = categoryRepository.save(category);
-        }
-
-        Category category3 = categoryRepository.findByCategoryId(req.getCategory3());
-        if(category3 == null) {
-            Category category = new Category();
-            category.setCategoryId(req.getCategory3());
-            category.setLevel(3);
-            category.setParentCategory(category2);
-            category3 = categoryRepository.save(category);
+        if(category.getLevel() != 3) {
+            throw new ProductException("Product category must be a leaf-level category");
         }
 
         int discountPercentage = calculateDiscountPercentage(req.getMrpPrice(), req.getSellingPrice());
 
         Product product = new Product();
         product.setSeller(seller);
-        product.setCategory(category3);
+        product.setCategory(category);
         product.setDescription(req.getDescription());
         product.setCreatedAt(LocalDateTime.now());
         product.setTitle(req.getTitle());

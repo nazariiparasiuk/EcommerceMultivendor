@@ -34,7 +34,7 @@ public class AppConfig  {
                 SessionCreationPolicy.STATELESS
         )).authorizeHttpRequests(authorize -> authorize
                 .requestMatchers("/api/products/*/reviews").permitAll()
-                .requestMatchers(HttpMethod.DELETE, "/sellers/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/sellers/{id}").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.PATCH, "/sellers").authenticated()
                 .requestMatchers("/admin/deals/**").hasRole("ADMIN")
                 .requestMatchers("/sellers/products/**").hasRole("SELLER")
