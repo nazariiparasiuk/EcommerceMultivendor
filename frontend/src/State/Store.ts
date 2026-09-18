@@ -13,11 +13,13 @@ import transactionSlice from "./seller/transactionSlice";
 import adminSlice from "./admin/adminSlice";
 import customerSlice from "./customer/customerSlice";
 import dealSlice from "./admin/dealSlice";
+import categorySlice from "./customer/categorySlice";
 
 const rootReducer = combineReducers({
     seller:sellerSlice,
     sellerProduct:sellerProductSlice,
     product:productSlice,
+    categories:categorySlice,
     auth:authSlice,
     cart:cartSlice,
     order:orderSlice,

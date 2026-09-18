@@ -15,41 +15,12 @@ import {
   Snackbar,
   Alert,
 } from "@mui/material";
-import "tailwindcss/tailwind.css";
 import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
 import CloseIcon from "@mui/icons-material/Close";
-import { mainCategory } from "../../../data/category/mainCategory";
-import { isTemplateMiddle } from "typescript";
-import { menLevelTwo } from "../../../data/category/level two/menLevelTwo";
-import { womenLevelTwo } from "../../../data/category/level two/womenLevelTwo";
-import { menLevelThree } from "../../../data/category/level three/menLevelThree";
-import { womenLevelThree } from "../../../data/category/level three/womenLevelThree";
 import { colors } from "../../../data/Filter/color";
-import { electronicsLevelThree } from "../../../data/category/level three/electronicsLevelThree";
-import { electronicsLevelTwo } from "../../../data/category/level two/electronicsLavelTwo";
-import { furnitureLevelTwo } from "../../../data/category/level two/furnitureLevleTwo";
-import { furnitureLevelThree } from "../../../data/category/level three/furnitureLevelThree";
 import { uploadToCloudinary } from "../../../Util/UploadToCloudinary";
-import { useAppDispatch } from "../../../State/Store";
+import { useAppDispatch, useAppSelector } from "../../../State/Store";
 import { createProduct } from "../../../State/seller/sellerProductSlice";
-
-const categoryTwo: { [key: string]: any[] } = {
-  men: menLevelTwo,
-  women: womenLevelTwo,
-  kids: [],
-  home_furniture: furnitureLevelTwo,
-  beauty: [],
-  electronics: electronicsLevelTwo,
-};
-
-const categoryThree: { [key: string]: any[] } = {
-  men: menLevelThree,
-  women: womenLevelThree,
-  kids: [],
-  home_furniture: furnitureLevelThree,
-  beauty: [],
-  electronics: electronicsLevelThree,
-};
 
 const validationSchema = Yup.object({
   title: Yup.string()
@@ -81,6 +52,13 @@ const AddProduct = () => {
   const [snackbarOpen, setOpenSnackbar] = useState(false);
   const dispatch = useAppDispatch();
 
+  const { categories } = useAppSelector((store) => store.categories);
+  const departments = categories.filter((c) => c.level === 1);
+  const levelTwoFor = (parentCategoryId: string) =>
+    categories.filter((c) => c.level === 2 && c.parentCategory?.categoryId === parentCategoryId);
+  const levelThreeFor = (parentCategoryId: string) =>
+    categories.filter((c) => c.level === 3 && c.parentCategory?.categoryId === parentCategoryId);
+
   const formik = useFormik({
     initialValues: {
       title: "",
@@ -97,8 +75,9 @@ const AddProduct = () => {
     },
     // validationSchema: validationSchema,
     onSubmit: (values) => {
-      console.log("PRODUCTS ----- ", values);
-      dispatch(createProduct({request:values, jwt:localStorage.getItem("jwt")}));
+      const request = { ...values, category: values.category3 };
+      console.log("PRODUCTS ----- ", request);
+      dispatch(createProduct({request, jwt:localStorage.getItem("jwt")}));
     },
   });
 
@@ -114,13 +93,6 @@ const AddProduct = () => {
     const updatedImages = [...formik.values.images];
     updatedImages.splice(index, 1);
     formik.setFieldValue("images", updatedImages);
-  };
-
-  const childCategory = (category: any, parentCategoryId: any) => {
-    return category.filter((child: any) => {
-      // console.log("Category", parentCategoryId, child)
-      return child.parentCategoryId == parentCategoryId;
-    });
   };
 
   const handleCloseSnackbar = () => {
@@ -319,7 +291,7 @@ const AddProduct = () => {
                 label="Category"
               >
                 {/* <MenuItem value=""><em>None</em></MenuItem> */}
-                {mainCategory.map((item) => (
+                {departments.map((item) => (
                   <MenuItem value={item.categoryId}>{item.name}</MenuItem>
                 ))}
               </Select>
@@ -345,7 +317,7 @@ const AddProduct = () => {
                 label="Second Category"
               >
                 {formik.values.category &&
-                  categoryTwo[formik.values.category]?.map((item) => (
+                  levelTwoFor(formik.values.category).map((item) => (
                     <MenuItem value={item.categoryId}>{item.name}</MenuItem>
                   ))}
               </Select>
@@ -373,10 +345,7 @@ const AddProduct = () => {
                   <em>None</em>
                 </MenuItem>
                 {formik.values.category2 &&
-                  childCategory(
-                    categoryThree[formik.values.category],
-                    formik.values.category2
-                  )?.map((item: any) => (
+                  levelThreeFor(formik.values.category2).map((item) => (
                     <MenuItem value={item.categoryId}>{item.name}</MenuItem>
                   ))}
               </Select>
