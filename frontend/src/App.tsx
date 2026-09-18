@@ -26,6 +26,7 @@ import PaymentSuccess from './customer/pages/PaymentSuccess';
 import Wishlist from './customer/wishlist/Wishlist';
 import { createHomeCategories } from './State/customer/customerSlice';
 import { homeCategories } from './data/homeCategories';
+import SearchResults from './customer/pages/Search/SearchResult';
 
 function App() {
   const dispatch = useAppDispatch();
@@ -65,6 +66,7 @@ function App() {
           <Route path="/account/*" element={<Account/>}/>
           <Route path="/seller/*" element={<SellerDashboard/>}/>
           <Route path="/admin/*" element={<AdminDashboard/>}/>
+          <Route path="/search" element={<SearchResults/>}/>
         </Routes>
       </div>
     </ThemeProvider>
