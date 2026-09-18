@@ -1,5 +1,6 @@
 package com.store.repository;
 
+import com.store.model.Category;
 import com.store.model.Product;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -10,6 +11,7 @@ import java.util.List;
 
 public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
     List<Product> findBySellerId(Long id);
+    boolean existsByCategory(Category category);
     @Query("SELECT p FROM Product p WHERE (:query is null or lower(p.title)" +
             "LIKE lower(concat('%', :query, '%') ) )" +
             "or (:query is null or lower(p.category.name)" +
