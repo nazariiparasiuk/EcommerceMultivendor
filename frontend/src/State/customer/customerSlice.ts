@@ -1,9 +1,9 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import axios from 'axios';
 import { api } from '../../config/Api';
-import { HomeData, HomeCategory } from '../../types/homeCategoryTypes';
+import { HomeData, HomeCategory, HomeCategoryRequest } from '../../types/homeCategoryTypes';
 
-export const createHomeCategories = createAsyncThunk<HomeData, HomeCategory[]>(
+export const createHomeCategories = createAsyncThunk<HomeData, HomeCategoryRequest[]>(
   'home/createHomeCategories',
   async (homeCategories, { rejectWithValue }) => {
     try {

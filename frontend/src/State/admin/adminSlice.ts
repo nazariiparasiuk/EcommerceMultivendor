@@ -1,10 +1,10 @@
 import { createAsyncThunk, createSlice} from '@reduxjs/toolkit';
 import { api } from '../../config/Api';
-import { HomeCategory } from '../../types/homeCategoryTypes';
+import { HomeCategory, HomeCategoryRequest } from '../../types/homeCategoryTypes';
 
 const API_URL = '/admin';
 
-export const updateHomeCategory = createAsyncThunk<HomeCategory, { id: number; data: HomeCategory }>(
+export const updateHomeCategory = createAsyncThunk<HomeCategory, { id: number; data: HomeCategoryRequest }>(
   'homeCategory/updateHomeCategory',
   async ({ id, data }, { rejectWithValue }) => {
     try {
