@@ -38,6 +38,7 @@ public class AppConfig  {
                 .requestMatchers(HttpMethod.PATCH, "/sellers").authenticated()
                 .requestMatchers("/admin/deals/**").hasRole("ADMIN")
                 .requestMatchers("/sellers/products/**").hasRole("SELLER")
+                .requestMatchers(HttpMethod.GET, "/api/categories").permitAll()
                 .requestMatchers("/api/**").authenticated()
                 .anyRequest().permitAll()
         ).addFilterBefore(new JwtTokenValidator(jwtSigningKey), BasicAuthenticationFilter.class)
