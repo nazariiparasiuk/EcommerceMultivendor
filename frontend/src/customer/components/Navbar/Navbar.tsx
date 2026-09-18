@@ -5,14 +5,13 @@ import SearchIcon from '@mui/icons-material/Search';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import { AddShoppingCart, FavoriteBorder, Storefront } from '@mui/icons-material';
 import CategorySheet from './CategorySheet';
-import { mainCategory } from '../../../data/category/mainCategory';
 import { useNavigate } from 'react-router-dom';
 import { useAppSelector } from '../../../State/Store';
 
 const Navbar = () => {
     const theme = useTheme();
     const isLarge = useMediaQuery(theme.breakpoints.up('lg'));
-    const [selectedCategory, setSelectedCategory] = useState("men");
+    const [selectedCategory, setSelectedCategory] = useState("clothing");
     const [showCategorySheet, setShowCategorySheet] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
 
@@ -22,7 +21,8 @@ const Navbar = () => {
         }
     };
     const navigate = useNavigate();
-    const {auth} = useAppSelector(store => store);
+    const {auth, categories} = useAppSelector(store => store);
+    const departments = categories.categories.filter((c) => c.level === 1);
     return (
         <Box className='sticky top-0 left-0 right-0 bg-white' sx={{zIndex:2}}>
             <div className='flex items-center justify-between px-5 lg:px-20 h-[70px] border-b'>
@@ -36,7 +36,7 @@ const Navbar = () => {
                         </h1>
                     </div>
                     <ul className='flex items-center font-medium text-gray-800'>
-                        {mainCategory.map((item) => <li 
+                        {departments.map((item) => <li
                         onMouseLeave={()=>{
                             setShowCategorySheet(false);
                         }}

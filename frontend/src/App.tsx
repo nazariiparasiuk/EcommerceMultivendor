@@ -1,6 +1,5 @@
 import React, { use, useEffect } from 'react';
 import logo from './logo.svg';
-import './App.css';
 import { Button, ThemeProvider } from '@mui/material';
 import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
 import Navbar from './customer/components/Navbar/Navbar';
@@ -27,6 +26,7 @@ import Wishlist from './customer/wishlist/Wishlist';
 import { createHomeCategories } from './State/customer/customerSlice';
 import { homeCategories } from './data/homeCategories';
 import SearchResults from './customer/pages/Search/SearchResult';
+import { fetchCategories } from './State/customer/categorySlice';
 
 function App() {
   const dispatch = useAppDispatch();
@@ -36,6 +36,7 @@ function App() {
   useEffect(() => {
     dispatch(fetchSellerProfile(localStorage.getItem("jwt") || ""));
     dispatch(createHomeCategories(homeCategories));
+    dispatch(fetchCategories());
   }, []);
 
   useEffect(() => {
