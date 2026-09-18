@@ -67,6 +67,27 @@ public class ProductServiceImpl implements ProductService {
         return (int) discountPercentage;
     }
 
+    private List<String> collectLeafCategoryIds(String categoryId) {
+        Category root = categoryRepository.findByCategoryId(categoryId);
+        if(root == null) {
+            return new ArrayList<>();
+        }
+        List<String> leafIds = new ArrayList<>();
+        collectLeafIdsRecursive(root, leafIds);
+        return leafIds;
+    }
+
+    private void collectLeafIdsRecursive(Category category, List<String> leafIds) {
+        List<Category> children = categoryRepository.findByParentCategory(category);
+        if(children.isEmpty()) {
+            leafIds.add(category.getCategoryId());
+        } else {
+            for(Category child : children) {
+                collectLeafIdsRecursive(child, leafIds);
+            }
+        }
+    }
+
     @Override
     public void deleteProduct(Long productId) throws ProductException {
         Product product = findProductById(productId);
@@ -96,8 +117,13 @@ public class ProductServiceImpl implements ProductService {
         Specification<Product> spec = (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
             if(category != null) {
+                List<String> leafCategoryIds = collectLeafCategoryIds(category);
                 Join<Product, Category> categoryJoin = root.join("category");
-                predicates.add(criteriaBuilder.equal(categoryJoin.get("categoryId"), category));
+                if(leafCategoryIds.isEmpty()) {
+                    predicates.add(criteriaBuilder.disjunction());
+                } else {
+                    predicates.add(categoryJoin.get("categoryId").in(leafCategoryIds));
+                }
             }
             if(colors != null && !colors.isEmpty()) {
                 predicates.add(criteriaBuilder.equal(criteriaBuilder.lower(root.get("color")), colors));
