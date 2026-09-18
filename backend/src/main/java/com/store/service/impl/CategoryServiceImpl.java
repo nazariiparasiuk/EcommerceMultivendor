@@ -56,6 +56,14 @@ public class CategoryServiceImpl implements CategoryService {
         if (category.getName() != null) {
             existing.setName(category.getName());
         }
+
+        if (category.getParentCategory() != null) {
+            Category newParent = categoryRepository.findById(category.getParentCategory().getId())
+                    .orElseThrow(() -> new Exception("Parent category not found"));
+            existing.setParentCategory(newParent);
+            existing.setLevel(newParent.getLevel() + 1);
+        }
+
         return categoryRepository.save(existing);
     }
 
