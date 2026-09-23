@@ -1,53 +1,43 @@
-import React, { use } from 'react'
-import { electronicsLevelTwo } from '../../../data/category/level two/electronicsLavelTwo'
-import { menLevelTwo } from '../../../data/category/level two/menLevelTwo'
-import { womenLevelTwo } from '../../../data/category/level two/womenLevelTwo'
-import { furnitureLevelTwo } from '../../../data/category/level two/furnitureLevleTwo'
-import { electronicsLevelThree } from '../../../data/category/level three/electronicsLevelThree'
-import { furnitureLevelThree } from '../../../data/category/level three/furnitureLevelThree'
-import { menLevelThree } from '../../../data/category/level three/menLevelThree'
-import { womenLevelThree } from '../../../data/category/level three/womenLevelThree'
+import React from 'react'
 import { Box } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
-
-const categoryTwo:{[key:string]:any[]} = {
-    men:menLevelTwo,
-    women:womenLevelTwo,
-    electronics:electronicsLevelTwo,
-    home_furniture:furnitureLevelTwo
-}
-const categoryThree:{[key:string]:any[]} = {
-    men:menLevelThree,
-    women:womenLevelThree,
-    electronics:electronicsLevelThree,
-    home_furniture:furnitureLevelThree
-}
+import { useAppSelector } from '../../../State/Store'
 
 const CategorySheet = ({selectedCategory, setShowSheet}:any) => {
   const navigate = useNavigate();
+  const { categories } = useAppSelector(store => store.categories);
 
-  const childCategory = (category: any, parentCategoryId:any) => {
-    return category.filter((child:any)=>child.parentCategoryId === parentCategoryId)
-  }
+  const levelTwo = categories.filter(
+    (c) => c.level === 2 && c.parentCategory?.categoryId === selectedCategory
+  );
+  const levelThreeFor = (parentCategoryId: string) => categories.filter(
+    (c) => c.level === 3 && c.parentCategory?.categoryId === parentCategoryId
+  );
+
+  const accentStyles: {[key:string]: {heading: string, hoverText: string}} = {
+    clothing: { heading: 'text-rose-ink', hoverText: 'hover:text-rose-ink' },
+    electronics: { heading: 'text-primary-color', hoverText: 'hover:text-primary-color' },
+    home_goods: { heading: 'text-amber-ink', hoverText: 'hover:text-amber-ink' },
+  };
+  const accent = accentStyles[selectedCategory] || { heading: 'text-primary-color', hoverText: 'hover:text-primary-color' };
+
   return (
     <Box sx={
       {zIndex: 1}
-    } className='bg-white shadow-lg lg:h-[500px] overflow-y-auto'>
+    } className='bg-white shadow-lg max-h-[500px] overflow-y-auto'>
       <div className='flex text-sm flex-wrap'>
         {
-          categoryTwo[selectedCategory]?.map((item, index) => 
-          <div className={`p-8 lg:w-[20%] ${index%2==0 ? "bg-slate-50":"bg-white"}`}>
-            <p className='text-primary-color lg:mb-5 font-semibold'>{item.name}</p>
+          levelTwo.map((item, index) =>
+          <div key={item.categoryId} className={`p-8 lg:w-56 ${index%2==0 ? "bg-slate-50":"bg-white"}`}>
+            <p className={`${accent.heading} lg:mb-5 font-semibold`}>{item.name}</p>
             <ul className='space-y-3'>
-              
-              {childCategory(categoryThree[selectedCategory], item.categoryId).map
-              ((item:any)=> <div>
-              <li onClick={()=>navigate("/products/"+item.categoryId)} className='hover:text-primary-color cursor-pointer'>
-                {item.name}
+
+              {levelThreeFor(item.categoryId).map
+              ((leaf)=> <div key={leaf.categoryId}>
+              <li onClick={()=>navigate("/products/"+leaf.categoryId)} className={`${accent.hoverText} cursor-pointer`}>
+                {leaf.name}
               </li>
               </div>)}
-
-              
 
             </ul>
           </div>)

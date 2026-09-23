@@ -6,9 +6,18 @@ module.exports = {
   theme: {
     extend: {
       colors:{
-        "primary-color":"#00927c",
-        "secondary-color":"#EAF0F1",
-      }
+        "primary-color":"#4F46E5",
+        "secondary-color":"#EBEDF1",
+        "amber":"#FDB92F",
+        "amber-ink":"#4A3300",
+        "rose":"#E8637F",
+        "rose-ink":"#7A1030",
+      },
+      fontFamily:{
+        display: ["Unbounded", "sans-serif"],
+        body: ["Plus Jakarta Sans", "sans-serif"],
+        mono: ["IBM Plex Mono", "monospace"],
+      },
     },
   },
   plugins: [],

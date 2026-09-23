@@ -4,11 +4,14 @@ const customTheme = createTheme({
     palette: {
         mode: "light",
         primary: {
-            main: "#00927c",
+            main: "#4F46E5",
         },
         secondary: {
-            main: "#EAF0F1"
+            main: "#EBEDF1"
         }
+    },
+    typography: {
+        fontFamily: "'Plus Jakarta Sans', sans-serif",
     }
 })
 

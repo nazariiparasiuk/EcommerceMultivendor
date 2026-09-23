@@ -16,7 +16,8 @@ const Product = () => {
   const dispatch = useAppDispatch();
   const [searchParams, setSearchParams] = useSearchParams();
   const {category} = useParams();
-  const {product} = useAppSelector((store => store))
+  const {product, categories} = useAppSelector((store => store));
+  const categoryName = categories.categories.find((c) => c.categoryId === category)?.name || "All Products";
 
   const handleSortChange = (event:any) => {
     setSort(event.target.value)
@@ -32,20 +33,22 @@ const Product = () => {
     const minDiscount = searchParams.get("discount")?Number(searchParams.get("discount")):undefined;
     const pageNumber = page-1;
     const newFilter = {
+      category,
       color: color || "",
       minPrice: minPrice?Number(minPrice):undefined,
       maxPrice: maxPrice?Number(maxPrice):undefined,
       minDiscount,
+      sort,
       pageNumber
     }
 
-    dispatch(fetchAllProducts(newFilter)) 
-  },[category, searchParams])
+    dispatch(fetchAllProducts(newFilter))
+  },[category, searchParams, sort, page])
 
   return (
     <div className='-z-10 mt-10'>
       <div>
-        <h1 className='text-3xl text-center font-bold text-gray-700 pb-5 px-9 uppercase space-x-2'>women sarees</h1>
+        <h1 className='text-3xl text-center font-bold text-gray-700 pb-5 px-9 uppercase space-x-2'>{categoryName}</h1>
       </div>
 
       <div className='lg:flex'>
@@ -89,7 +92,7 @@ const Product = () => {
           </section>
           <div className='flex justify-center py-10'>
             <Pagination onChange={(e,value) => handlePageChange(value)}
-            count={10} variant='outlined' color='primary'/>
+              count={product.totalPages} page={page} variant='outlined' color='primary'/>
           </div>
         </div>
       </div>

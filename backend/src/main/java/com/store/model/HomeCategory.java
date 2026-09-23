@@ -1,10 +1,8 @@
 package com.store.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.store.domain.HomeCategorySection;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
@@ -21,6 +19,13 @@ public class HomeCategory {
 
     private String name;
     private String image;
-    private String categoryId;
+
+    @ManyToOne
+    @JsonIgnore
+    private Category category;
+
+    public String getCategoryId() {
+        return category != null ? category.getCategoryId() : null;
+    }
     private HomeCategorySection section;
 }

@@ -1,8 +1,12 @@
 package com.store.config;
 
+import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -14,25 +18,37 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 
+import javax.crypto.SecretKey;
 import java.util.ArrayList;
 import java.util.Collections;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class AppConfig  {
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http, CorsConfigurationSource corsConfigurationSource) throws Exception {
+    SecurityFilterChain securityFilterChain(HttpSecurity http, SecretKey jwtSigningKey) throws Exception {
         http.sessionManagement(management -> management.sessionCreationPolicy(
                 SessionCreationPolicy.STATELESS
         )).authorizeHttpRequests(authorize -> authorize
-                .requestMatchers("/api/**").authenticated()
                 .requestMatchers("/api/products/*/reviews").permitAll()
+                .requestMatchers(HttpMethod.DELETE, "/sellers/{id}").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PATCH, "/sellers").authenticated()
+                .requestMatchers("/admin/deals/**").hasRole("ADMIN")
+                .requestMatchers("/sellers/products/**").hasRole("SELLER")
+                .requestMatchers(HttpMethod.GET, "/api/categories").permitAll()
+                .requestMatchers("/api/**").authenticated()
                 .anyRequest().permitAll()
-        ).addFilterBefore(new JwtTokenValidator(), BasicAuthenticationFilter.class)
+        ).addFilterBefore(new JwtTokenValidator(jwtSigningKey), BasicAuthenticationFilter.class)
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()));
         return http.build();
+    }
+
+    @Bean
+    SecretKey jwtSigningKey(@Value("${jwt.secret}") String jwtSecret) {
+        return Keys.hmacShaKeyFor(jwtSecret.getBytes());
     }
 
     private CorsConfigurationSource corsConfigurationSource() {

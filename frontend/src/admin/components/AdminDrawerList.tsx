@@ -1,6 +1,6 @@
 import React from 'react'
 import DrawerList from '../../component/DrawerList'
-import { AccountBox, Add, Category, Dashboard, ElectricBolt, Home, IntegrationInstructions, LocalOffer, Logout } from '@mui/icons-material';
+import { AccountBox, Add, Dashboard, IntegrationInstructions, LocalOffer, Logout } from '@mui/icons-material';
 
 const menu = [
     {
@@ -20,24 +20,6 @@ const menu = [
         path: "/admin/add-coupon",
         icon: <Add className="text-primary-color" />,
         activeIcon: <Add className="text-white" />,
-    },
-    {
-        name: "Home Page",
-        path: "/admin/home-grid",
-        icon: <Home className="text-primary-color" />,
-        activeIcon: <Home className="text-white" />,
-    },
-    {
-        name: "Electronics Category",
-        path: "/admin/electronics-category",
-        icon: <ElectricBolt className="text-primary-color" />,
-        activeIcon: <ElectricBolt className="text-white" />,
-    },
-    {
-        name: "Shop By Category",
-        path: "/admin/shop-by-category",
-        icon: <Category className="text-primary-color" />,
-        activeIcon: <Category className="text-white" />,
     },
     {
         name: "Deals",

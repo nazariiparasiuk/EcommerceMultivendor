@@ -1,6 +1,5 @@
 import React, { use, useEffect } from 'react';
 import logo from './logo.svg';
-import './App.css';
 import { Button, ThemeProvider } from '@mui/material';
 import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
 import Navbar from './customer/components/Navbar/Navbar';
@@ -26,6 +25,10 @@ import PaymentSuccess from './customer/pages/PaymentSuccess';
 import Wishlist from './customer/wishlist/Wishlist';
 import { createHomeCategories } from './State/customer/customerSlice';
 import { homeCategories } from './data/homeCategories';
+import SearchResults from './customer/pages/Search/SearchResult';
+import { fetchCategories } from './State/customer/categorySlice';
+import Footer from './customer/components/Footer/Footer';
+import { getWishlistByUserId } from './State/customer/wishlistSlice';
 
 function App() {
   const dispatch = useAppDispatch();
@@ -35,6 +38,7 @@ function App() {
   useEffect(() => {
     dispatch(fetchSellerProfile(localStorage.getItem("jwt") || ""));
     dispatch(createHomeCategories(homeCategories));
+    dispatch(fetchCategories());
   }, []);
 
   useEffect(() => {
@@ -46,6 +50,12 @@ function App() {
   useEffect(() => {
     dispatch(fetchUserProfile({jwt: auth.jwt || localStorage.getItem("jwt")}));
   }, [auth.jwt]);
+
+  useEffect(() => {
+    if (auth.user) {
+      dispatch(getWishlistByUserId());
+    }
+  }, [auth.user]);
 
   return (
     <ThemeProvider theme={customTheme}>
@@ -65,7 +75,9 @@ function App() {
           <Route path="/account/*" element={<Account/>}/>
           <Route path="/seller/*" element={<SellerDashboard/>}/>
           <Route path="/admin/*" element={<AdminDashboard/>}/>
+          <Route path="/search" element={<SearchResults/>}/>
         </Routes>
+        <Footer/>
       </div>
     </ThemeProvider>
   );

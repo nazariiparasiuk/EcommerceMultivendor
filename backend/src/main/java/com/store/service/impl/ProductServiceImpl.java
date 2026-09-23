@@ -1,12 +1,15 @@
 package com.store.service.impl;
 
+import com.store.domain.OrderStatus;
 import com.store.exception.ProductException;
 import com.store.model.Product;
 import com.store.model.Seller;
 import com.store.model.Category;
 import com.store.repository.CategoryRepository;
+import com.store.repository.OrderItemRepository;
 import com.store.repository.ProductRepository;
 import com.store.request.CreateProductRequest;
+import com.store.response.ProductFilterOptions;
 import com.store.service.ProductService;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
@@ -19,8 +22,10 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -28,41 +33,24 @@ public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
+    private final OrderItemRepository orderItemRepository;
 
     @Override
-    public Product createProduct(CreateProductRequest req, Seller seller) {
+    public Product createProduct(CreateProductRequest req, Seller seller) throws ProductException {
 
-        Category category1 = categoryRepository.findByCategoryId(req.getCategory());
-        if(category1 == null) {
-            Category category = new Category();
-            category.setCategoryId(req.getCategory());
-            category.setLevel(1);
-            category1 = categoryRepository.save(category);
+        Category category = categoryRepository.findByCategoryId(req.getCategory());
+        if(category == null) {
+            throw new ProductException("Category not found with categoryId " + req.getCategory());
         }
-
-        Category category2 = categoryRepository.findByCategoryId(req.getCategory2());
-        if(category2 == null) {
-            Category category = new Category();
-            category.setCategoryId(req.getCategory2());
-            category.setLevel(2);
-            category.setParentCategory(category1);
-            category2 = categoryRepository.save(category);
-        }
-
-        Category category3 = categoryRepository.findByCategoryId(req.getCategory3());
-        if(category3 == null) {
-            Category category = new Category();
-            category.setCategoryId(req.getCategory3());
-            category.setLevel(3);
-            category.setParentCategory(category2);
-            category3 = categoryRepository.save(category);
+        if(category.getLevel() != 3) {
+            throw new ProductException("Product category must be a leaf-level category");
         }
 
         int discountPercentage = calculateDiscountPercentage(req.getMrpPrice(), req.getSellingPrice());
 
         Product product = new Product();
         product.setSeller(seller);
-        product.setCategory(category3);
+        product.setCategory(category);
         product.setDescription(req.getDescription());
         product.setCreatedAt(LocalDateTime.now());
         product.setTitle(req.getTitle());
@@ -83,6 +71,27 @@ public class ProductServiceImpl implements ProductService {
         double discount = mrpPrice - sellingPrice;
         double discountPercentage = (discount / mrpPrice) * 100;
         return (int) discountPercentage;
+    }
+
+    private List<String> collectLeafCategoryIds(String categoryId) {
+        Category root = categoryRepository.findByCategoryId(categoryId);
+        if(root == null) {
+            return new ArrayList<>();
+        }
+        List<String> leafIds = new ArrayList<>();
+        collectLeafIdsRecursive(root, leafIds);
+        return leafIds;
+    }
+
+    private void collectLeafIdsRecursive(Category category, List<String> leafIds) {
+        List<Category> children = categoryRepository.findByParentCategory(category);
+        if(children.isEmpty()) {
+            leafIds.add(category.getCategoryId());
+        } else {
+            for(Category child : children) {
+                collectLeafIdsRecursive(child, leafIds);
+            }
+        }
     }
 
     @Override
@@ -114,8 +123,13 @@ public class ProductServiceImpl implements ProductService {
         Specification<Product> spec = (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
             if(category != null) {
+                List<String> leafCategoryIds = collectLeafCategoryIds(category);
                 Join<Product, Category> categoryJoin = root.join("category");
-                predicates.add(criteriaBuilder.equal(categoryJoin.get("categoryId"), category));
+                if(leafCategoryIds.isEmpty()) {
+                    predicates.add(criteriaBuilder.disjunction());
+                } else {
+                    predicates.add(categoryJoin.get("categoryId").in(leafCategoryIds));
+                }
             }
             if(colors != null && !colors.isEmpty()) {
                 predicates.add(criteriaBuilder.equal(criteriaBuilder.lower(root.get("color")), colors));
@@ -156,5 +170,71 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public List<Product> getProductBySellerId(Long sellerId) {
         return productRepository.findBySellerId(sellerId);
+    }
+
+    @Override
+    public ProductFilterOptions getFilterOptions(String category, String color, Integer minPrice, Integer maxPrice) {
+        List<String> leafCategoryIds = category != null ? collectLeafCategoryIds(category) : null;
+
+        Specification<Product> colorsSpec = (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            if(leafCategoryIds != null) {
+                if(leafCategoryIds.isEmpty()) {
+                    predicates.add(criteriaBuilder.disjunction());
+                } else {
+                    predicates.add(root.join("category").get("categoryId").in(leafCategoryIds));
+                }
+            }
+            if(minPrice != null) {
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("sellingPrice"), minPrice));
+            }
+            if(maxPrice != null) {
+                predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("sellingPrice"), maxPrice));
+            }
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
+        List<String> colors = productRepository.findAll(colorsSpec).stream()
+                .map(Product::getColor)
+                .filter(c -> c != null && !c.isBlank())
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+
+        Specification<Product> priceSpec = (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            if(leafCategoryIds != null) {
+                if(leafCategoryIds.isEmpty()) {
+                    predicates.add(criteriaBuilder.disjunction());
+                } else {
+                    predicates.add(root.join("category").get("categoryId").in(leafCategoryIds));
+                }
+            }
+            if(color != null && !color.isEmpty()) {
+                predicates.add(criteriaBuilder.equal(criteriaBuilder.lower(root.get("color")), color.toLowerCase()));
+            }
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
+        List<Product> priceScopedProducts = productRepository.findAll(priceSpec);
+        int minSellingPrice = priceScopedProducts.stream().mapToInt(Product::getSellingPrice).min().orElse(0);
+        int maxSellingPrice = priceScopedProducts.stream().mapToInt(Product::getSellingPrice).max().orElse(0);
+
+        return new ProductFilterOptions(colors, minSellingPrice, maxSellingPrice);
+    }
+
+    @Override
+    public List<Product> getPopularProducts(int limit) {
+        List<Long> bestSellerIds = orderItemRepository.findBestSellingProductIds(
+                LocalDateTime.now().minusDays(30),
+                List.of(OrderStatus.PENDING, OrderStatus.CANCELLED));
+        Map<Long, Product> bestSellersById = productRepository.findAllById(bestSellerIds).stream()
+                .collect(Collectors.toMap(Product::getId, Function.identity()));
+
+        Set<Long> seenCategories = new HashSet<>();
+        return Stream.concat(
+                        bestSellerIds.stream().map(bestSellersById::get).filter(Objects::nonNull),
+                        productRepository.findTop50ByOrderByCreatedAtDesc().stream())
+                .filter(product -> seenCategories.add(product.getCategory().getId()))
+                .limit(limit)
+                .toList();
     }
 }
