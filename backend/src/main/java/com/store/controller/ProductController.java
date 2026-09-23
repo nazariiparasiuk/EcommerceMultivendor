@@ -31,6 +31,11 @@ public class ProductController {
         return new ResponseEntity<>(products, HttpStatus.OK);
     }
 
+    @GetMapping("/popular")
+    public ResponseEntity<List<Product>> getPopularProducts() {
+        return ResponseEntity.ok(productService.getPopularProducts(8));
+    }
+
     @GetMapping
     public ResponseEntity<Page<Product>> getAllProducts(
             @RequestParam(required = false) String category,

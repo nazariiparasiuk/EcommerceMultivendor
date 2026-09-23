@@ -27,6 +27,8 @@ import { createHomeCategories } from './State/customer/customerSlice';
 import { homeCategories } from './data/homeCategories';
 import SearchResults from './customer/pages/Search/SearchResult';
 import { fetchCategories } from './State/customer/categorySlice';
+import Footer from './customer/components/Footer/Footer';
+import { getWishlistByUserId } from './State/customer/wishlistSlice';
 
 function App() {
   const dispatch = useAppDispatch();
@@ -49,6 +51,12 @@ function App() {
     dispatch(fetchUserProfile({jwt: auth.jwt || localStorage.getItem("jwt")}));
   }, [auth.jwt]);
 
+  useEffect(() => {
+    if (auth.user) {
+      dispatch(getWishlistByUserId());
+    }
+  }, [auth.user]);
+
   return (
     <ThemeProvider theme={customTheme}>
       <div>
@@ -69,6 +77,7 @@ function App() {
           <Route path="/admin/*" element={<AdminDashboard/>}/>
           <Route path="/search" element={<SearchResults/>}/>
         </Routes>
+        <Footer/>
       </div>
     </ThemeProvider>
   );
