@@ -1,10 +1,12 @@
 package com.store.service.impl;
 
+import com.store.domain.OrderStatus;
 import com.store.exception.ProductException;
 import com.store.model.Product;
 import com.store.model.Seller;
 import com.store.model.Category;
 import com.store.repository.CategoryRepository;
+import com.store.repository.OrderItemRepository;
 import com.store.repository.ProductRepository;
 import com.store.request.CreateProductRequest;
 import com.store.response.ProductFilterOptions;
@@ -20,9 +22,10 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +33,7 @@ public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
+    private final OrderItemRepository orderItemRepository;
 
     @Override
     public Product createProduct(CreateProductRequest req, Seller seller) throws ProductException {
@@ -215,5 +219,22 @@ public class ProductServiceImpl implements ProductService {
         int maxSellingPrice = priceScopedProducts.stream().mapToInt(Product::getSellingPrice).max().orElse(0);
 
         return new ProductFilterOptions(colors, minSellingPrice, maxSellingPrice);
+    }
+
+    @Override
+    public List<Product> getPopularProducts(int limit) {
+        List<Long> bestSellerIds = orderItemRepository.findBestSellingProductIds(
+                LocalDateTime.now().minusDays(30),
+                List.of(OrderStatus.PENDING, OrderStatus.CANCELLED));
+        Map<Long, Product> bestSellersById = productRepository.findAllById(bestSellerIds).stream()
+                .collect(Collectors.toMap(Product::getId, Function.identity()));
+
+        Set<Long> seenCategories = new HashSet<>();
+        return Stream.concat(
+                        bestSellerIds.stream().map(bestSellersById::get).filter(Objects::nonNull),
+                        productRepository.findTop50ByOrderByCreatedAtDesc().stream())
+                .filter(product -> seenCategories.add(product.getCategory().getId()))
+                .limit(limit)
+                .toList();
     }
 }

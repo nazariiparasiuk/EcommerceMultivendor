@@ -67,6 +67,17 @@ export const fetchFilterOptions = createAsyncThunk<FilterOptions, {category?: st
     }
 )
 
+export const fetchPopularProducts = createAsyncThunk<Product[]>("products/fetchPopularProducts",
+    async (_, {rejectWithValue}) => {
+        try {
+            const response = await api.get(`${API_URL}/popular`);
+            return response.data;
+        } catch (error:any) {
+            return rejectWithValue(error.message);
+        }
+    }
+)
+
 interface ProductState {
     product: Product | null;
     products: Product[];
@@ -75,6 +86,7 @@ interface ProductState {
     error: string | null | undefined | any;
     searchProduct: Product[];
     filterOptions: FilterOptions;
+    popularProducts: Product[]
 }
 
 const initialState: ProductState = {
@@ -85,6 +97,7 @@ const initialState: ProductState = {
     error: null,
     searchProduct: [],
     filterOptions: {colors: [], minPrice: 0, maxPrice: 0},
+    popularProducts: []
 }
 
 const productSlice = createSlice({
@@ -139,6 +152,10 @@ const productSlice = createSlice({
         builder.addCase(fetchFilterOptions.rejected, (state, action) => {
             state.loading = false;
             state.error = action.payload;
+        });
+
+        builder.addCase(fetchPopularProducts.fulfilled, (state, action) => {
+            state.popularProducts = action.payload;
         });
     }
 })

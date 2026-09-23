@@ -1,34 +1,21 @@
 import React from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Deal } from '../../../../types/dealTypes'
 
 const DealCard = ({item}:{item:Deal}) => {
+  const navigate = useNavigate();
   return (
-    /*<div className='w-[13rem] cursor-pointer'>
-        <img className='border-x-[7px] border-t-[7px] border-emerald-600 w-full h-[12rem] object-cover object-top' 
-        src="https://cdn.pixabay.com/photo/2014/12/10/12/28/iphone-563071_1280.jpg" alt=''/>
-        <div className='border-4 border-black bg-black text-white p-2 text-center'>
-            <p className='text-lg font-semibold'>Mobile Phone</p>
-            <p className='text-2xl font-bold'>20% OFF</p>
-            <p className='text-balance text-lg'>shop now</p>
-        </div>
-    </div>*/
-    <div className="w-56 cursor-pointer group transition-all duration-300 hover:scale-105">
-        <div className="relative rounded-t-xl overflow-hidden border-4 border-emerald-500">
-            <img
-            className="w-full h-48 object-cover object-top group-hover:scale-110 transition-transform duration-500"
-            src={item.category.image}
-            alt=""
-            />
-        </div>
-        <div className="bg-white text-center p-3 rounded-b-xl border-x border-b border-gray-200 shadow-md">
-            <p className="text-lg font-semibold text-gray-800">{item.category.name}</p>
-            <p className="text-2xl font-bold text-emerald-600 mt-1">{item.discount}% OFF</p>
-            <p className="text-sm uppercase tracking-wide text-emerald-500 mt-1">Shop Now</p>
-        </div>
+    <div onClick={() => navigate(`/products/${item.category.categoryId}`)}
+      className="group min-w-[220px] sm:min-w-0 bg-white border border-gray-200 rounded-2xl px-5 py-5 flex items-center justify-between gap-4 cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5">
+      <span className="inline-flex items-baseline gap-1.5 bg-rose/10 text-rose-ink font-bold px-3 py-1.5 rounded-full whitespace-nowrap shrink-0">
+        <span className="text-xs font-medium">Up to</span>
+        <span className="font-mono text-lg">{item.discount}%</span>
+        <span className="text-xs font-medium">off</span>
+      </span>
+      <span className="text-sm font-medium text-gray-600 text-right max-w-[16ch] group-hover:text-primary-color transition-colors">
+        {item.category.name}
+      </span>
     </div>
-
-
-    
   )
 }
 

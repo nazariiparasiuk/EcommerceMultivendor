@@ -4,11 +4,8 @@ interface Deal{
 }
 
 export interface HomeData {
-  id: number; 
-  grid: HomeCategory[]; 
-  shopByCategories: HomeCategory[]; 
-  electronics: HomeCategory[]; 
-  deals: Deal[]; 
+  id: number;
+  deals: Deal[];
   dealCategories:HomeCategory[];
 }
   

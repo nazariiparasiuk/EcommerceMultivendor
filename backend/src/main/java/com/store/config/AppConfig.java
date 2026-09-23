@@ -28,8 +28,7 @@ import java.util.Collections;
 public class AppConfig  {
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http, CorsConfigurationSource corsConfigurationSource,
-                                            SecretKey jwtSigningKey) throws Exception {
+    SecurityFilterChain securityFilterChain(HttpSecurity http, SecretKey jwtSigningKey) throws Exception {
         http.sessionManagement(management -> management.sessionCreationPolicy(
                 SessionCreationPolicy.STATELESS
         )).authorizeHttpRequests(authorize -> authorize

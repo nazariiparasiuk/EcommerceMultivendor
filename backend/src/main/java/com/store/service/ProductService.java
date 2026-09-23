@@ -24,4 +24,5 @@ public interface ProductService {
                                  );
     List<Product> getProductBySellerId(Long sellerId);
     ProductFilterOptions getFilterOptions(String category, String color, Integer minPrice, Integer maxPrice);
+    List<Product> getPopularProducts(int limit);
 }
