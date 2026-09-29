@@ -5,17 +5,15 @@ import com.store.domain.AccountStatus;
 import com.store.exception.SellerException;
 import com.store.model.Seller;
 import com.store.model.SellerReport;
-import com.store.model.VerificationCode;
-import com.store.repository.VerificationCodeRepository;
+import com.store.request.LoginOtpRequest;
 import com.store.request.LoginRequest;
+import com.store.request.SellerSignupRequest;
 import com.store.response.ApiResponse;
 import com.store.response.AuthResponse;
 import com.store.response.SellerResponse;
 import com.store.service.AuthService;
-import com.store.service.EmailService;
 import com.store.service.SellerReportService;
 import com.store.service.SellerService;
-import com.store.util.OtpUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,55 +28,29 @@ import java.util.stream.Collectors;
 public class SellerController {
     private final SellerService sellerService;
     private final SellerReportService sellerReportService;
-    private final VerificationCodeRepository verificationCodeRepository;
     private final AuthService authService;
-    private final EmailService emailService;
-    private final JwtProvider jwtProvider;
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> loginSeller(@RequestBody LoginRequest req) throws Exception {
-        String otp = req.getOtp();
-        String email = req.getEmail();
 
-        
-
-        req.setEmail("seller_" + email);
+        req.setEmail("seller_" + req.getEmail());
         AuthResponse authResponse = authService.authenticateUser(req);
 
         return ResponseEntity.ok(authResponse);
     }
 
-    @PatchMapping("/verify/{otp}")
-    public ResponseEntity<SellerResponse> verifySellerEmail(@PathVariable String otp) throws Exception {
-
-        VerificationCode verificationCode = verificationCodeRepository.findByOtp(otp);
-
-        if(verificationCode == null || !verificationCode.getOtp().equals(otp)) {
-            throw new Exception("Wrong otp");
-        }
-
-        Seller seller = sellerService.verifyEmail(verificationCode.getEmail(), otp);
-        return new ResponseEntity<>(SellerResponse.fromSeller(seller), HttpStatus.OK);
+    @PostMapping("/signup/code")
+    public ResponseEntity<ApiResponse> sendSignupCode(@RequestBody LoginOtpRequest req) throws Exception {
+        authService.sendSellerSignupCode(req.getEmail());
+        ApiResponse res = new ApiResponse();
+        res.setMessage("We sent a 6-digit code to " + req.getEmail() + ".");
+        return ResponseEntity.ok(res);
     }
 
     @PostMapping
-    public ResponseEntity<SellerResponse> createSeller(@RequestBody Seller seller) throws Exception {
-
-        Seller savedSeller = sellerService.createSeller(seller);
-
-        String otp = OtpUtil.generateOtp();
-
-        VerificationCode verificationCode = new VerificationCode();
-        verificationCode.setOtp(otp);
-        verificationCode.setEmail(seller.getEmail());
-        verificationCodeRepository.save(verificationCode);
-
-
-        String subject = "Ecommerce Multivendor Email Verification Code";
-        String text = "Welcome to Ecommerce Multivendor. Verify your account using this link ";
-        String frontend_url = "http://localhost:3000/verify-seller/";
-        emailService.sendVerificationEmail(seller.getEmail(), verificationCode.getOtp(), subject, text + frontend_url);
-        return new ResponseEntity<>(SellerResponse.fromSeller(savedSeller), HttpStatus.CREATED);
+    public ResponseEntity<SellerResponse> createSeller(@RequestBody SellerSignupRequest req) throws Exception {
+        Seller seller = authService.createSeller(req);
+        return new ResponseEntity<>(SellerResponse.fromSeller(seller), HttpStatus.CREATED);
     }
 
     @GetMapping("/{id}")

@@ -1,51 +1,82 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { api } from "../config/Api";
-import { User } from "../types/UserTypes";
+import { User, UserRole } from "../types/UserTypes";
 
-export const sendLoginSignupOtp = createAsyncThunk("/auth/sendLoginSignupOtp", 
-    async ({email}:{email:string}, {rejectWithValue}) => {
+export const authErrorMessage = (error: any): string => {
+    if (!error?.response) {
+        return "Can't reach Sellway right now. Check your connection and try again.";
+    }
+    return error.response.data?.error || error.response.data?.message || "Something went wrong. Try again.";
+};
+
+export const signin = createAsyncThunk<{ jwt: string, role: UserRole }, { email: string, password: string }, { rejectValue: string }>(
+    "auth/signin",
+    async (loginRequest, { rejectWithValue }) => {
         try {
-            const response = await api.post("/auth/sent/login-signup-otp", {email});
-            console.log("Login otp ", response);
+            const { data } = await api.post("/auth/signing", loginRequest);
+            localStorage.setItem("jwt", data.jwt);
+            return { jwt: data.jwt, role: data.role };
         } catch (error) {
-            console.log("ERROR - - - ", error);
+            return rejectWithValue(authErrorMessage(error));
         }
     }
-)
+);
 
-export const signin = createAsyncThunk<any, any>("/auth/signing", 
-    async (loginRequest, {rejectWithValue}) => {
+export const sendSignupCode = createAsyncThunk<string, { email: string }, { rejectValue: string }>(
+    "auth/sendSignupCode",
+    async ({ email }, { rejectWithValue }) => {
         try {
-            const response = await api.post("/auth/signing", loginRequest);
-            console.log("Login otp ", response.data);
-            localStorage.setItem("jwt", response.data.jwt);
-            return response.data.jwt;
+            const { data } = await api.post("/auth/signup/code", { email });
+            return data.message;
         } catch (error) {
-            console.log("ERROR - - - ", error);
+            return rejectWithValue(authErrorMessage(error));
         }
     }
-)
+);
 
-export const signup = createAsyncThunk<any, any>("/auth/signup", 
-    async (signupRequest, {rejectWithValue}) => {
+export const signup = createAsyncThunk<string, { email: string, fullName: string, password: string, otp: string }, { rejectValue: string }>(
+    "auth/signup",
+    async (signupRequest, { rejectWithValue }) => {
         try {
-            const response = await api.post("/auth/signup", signupRequest);
-            console.log("Login otp ", response.data);
-            localStorage.setItem("jwt", response.data.jwt);
-            return response.data.jwt;
+            const { data } = await api.post("/auth/signup", signupRequest);
+            localStorage.setItem("jwt", data.jwt);
+            return data.jwt;
         } catch (error) {
-            console.log("ERROR - - - ", error);
+            return rejectWithValue(authErrorMessage(error));
         }
     }
-)
+);
 
-export const fetchUserProfile = createAsyncThunk<any, any>("/auth/fetchUserProfile", 
+export const requestPasswordReset = createAsyncThunk<string, { email: string, role: UserRole }, { rejectValue: string }>(
+    "auth/requestPasswordReset",
+    async (request, { rejectWithValue }) => {
+        try {
+            const { data } = await api.post("/auth/password/forgot", request);
+            return data.message;
+        } catch (error) {
+            return rejectWithValue(authErrorMessage(error));
+        }
+    }
+);
+
+export const resetPassword = createAsyncThunk<string, { email: string, otp: string, newPassword: string, role: UserRole }, { rejectValue: string }>(
+    "auth/resetPassword",
+    async (request, { rejectWithValue }) => {
+        try {
+            const { data } = await api.post("/auth/password/reset", request);
+            return data.message;
+        } catch (error) {
+            return rejectWithValue(authErrorMessage(error));
+        }
+    }
+);
+
+export const fetchUserProfile = createAsyncThunk<any, any>("/auth/fetchUserProfile",
     async ({jwt}, {rejectWithValue}) => {
         try {
             const response = await api.get("/api/users/profile", {headers: {
                 Authorization: `Bearer ${jwt}`
             }});
-            console.log("User profile ", response.data);
             return response.data;
         } catch (error) {
             console.log("ERROR - - - ", error);
@@ -57,7 +88,6 @@ export const logout = createAsyncThunk<any, any>("/auth/logout",
     async (navigate, {rejectWithValue}) => {
         try {
             localStorage.clear();
-            console.log("Logout success");
             navigate("/");
         } catch (error) {
             console.log("ERROR - - - ", error);
@@ -67,18 +97,14 @@ export const logout = createAsyncThunk<any, any>("/auth/logout",
 
 interface AuthState {
     jwt: string | null;
-    otpSent: boolean;
     isLoggedIn: boolean;
-    user: User | null; 
-    loading: boolean;
+    user: User | null;
 }
 
-const initialState:AuthState = {
+const initialState: AuthState = {
     jwt: null,
-    otpSent: false,
     isLoggedIn: false,
     user: null,
-    loading: false,
 }
 
 const authSlice = createSlice({
@@ -86,18 +112,8 @@ const authSlice = createSlice({
     initialState,
     reducers: {},
     extraReducers: (builder) => {
-        builder.addCase(sendLoginSignupOtp.pending, (state) => {
-            state.loading = true;
-        })
-        builder.addCase(sendLoginSignupOtp.fulfilled, (state) => {
-            state.loading = false;
-            state.otpSent = true;
-        })
-        builder.addCase(sendLoginSignupOtp.rejected, (state) => {
-            state.loading = false;
-        })
         builder.addCase(signin.fulfilled, (state, action) => {
-            state.jwt = action.payload;
+            state.jwt = action.payload.jwt;
             state.isLoggedIn = true;
         })
         builder.addCase(signup.fulfilled, (state, action) => {
