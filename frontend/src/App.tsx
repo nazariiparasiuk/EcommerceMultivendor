@@ -11,7 +11,7 @@ import Review from './customer/pages/Review/Review';
 import Cart from './customer/pages/Cart/Cart';
 import Checkout from './customer/pages/Checkout/Checkout';
 import Account from './customer/pages/Account/Account';
-import { Route, Routes, useNavigate } from 'react-router-dom';
+import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { Reviews } from '@mui/icons-material';
 import BecomeSeller from './customer/pages/Become Seller/BecomeSeller';
 import SellerDashboard from './seller/pages/SellerDashboard/SellerDashboard';
@@ -19,7 +19,6 @@ import AdminDashboard from './admin/Pages/Dashboard/AdminDashboard';
 import { fetchProducts } from './State/fetchProduct';
 import store, { useAppDispatch, useAppSelector } from './State/Store';
 import { fetchSellerProfile } from './State/seller/sellerSlice';
-import Auth from './customer/pages/Auth/Auth';
 import { fetchUserProfile } from './State/AuthSlice';
 import PaymentSuccess from './customer/pages/PaymentSuccess';
 import Wishlist from './customer/wishlist/Wishlist';
@@ -29,11 +28,19 @@ import SearchResults from './customer/pages/Search/SearchResult';
 import { fetchCategories } from './State/customer/categorySlice';
 import Footer from './customer/components/Footer/Footer';
 import { getWishlistByUserId } from './State/customer/wishlistSlice';
+import Register from './customer/pages/Auth/Register';
+import ResetPassword from './customer/pages/Auth/ResetPassword';
+import SellerSignIn from './customer/pages/Auth/SellerSignIn';
+import SignIn from './customer/pages/Auth/SignIn';
+
+const AUTH_PAGES = ['/login', '/register', '/reset-password', '/seller-login', '/become-seller'];
 
 function App() {
   const dispatch = useAppDispatch();
   const {seller,auth} = useAppSelector(store => store);
   const navigate = useNavigate();
+  const location = useLocation();
+  const isAuthPage = AUTH_PAGES.includes(location.pathname);
 
   useEffect(() => {
     dispatch(fetchSellerProfile(localStorage.getItem("jwt") || ""));
@@ -60,10 +67,13 @@ function App() {
   return (
     <ThemeProvider theme={customTheme}>
       <div>
-        <Navbar/>
+        {!isAuthPage && <Navbar/>}
         <Routes>
           <Route path="/" element={<Home/>}/>
-          <Route path="/login" element={<Auth/>}/>
+          <Route path="/login" element={<SignIn/>}/>
+          <Route path="/register" element={<Register/>}/>
+          <Route path="/reset-password" element={<ResetPassword/>}/>
+          <Route path="/seller-login" element={<SellerSignIn/>}/>
           <Route path="/products/:category" element={<Product/>}/>
           <Route path="/reviews/:productId" element={<Reviews/>}/>
           <Route path="/product-details/:categoryId/:name/:productId" element={<ProductDetails/>}/>
@@ -77,7 +87,7 @@ function App() {
           <Route path="/admin/*" element={<AdminDashboard/>}/>
           <Route path="/search" element={<SearchResults/>}/>
         </Routes>
-        <Footer/>
+        {!isAuthPage && <Footer/>}
       </div>
     </ThemeProvider>
   );

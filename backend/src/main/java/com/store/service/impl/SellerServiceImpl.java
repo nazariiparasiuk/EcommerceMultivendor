@@ -2,16 +2,12 @@ package com.store.service.impl;
 
 import com.store.config.JwtProvider;
 import com.store.domain.AccountStatus;
-import com.store.domain.USER_ROLE;
 import com.store.exception.SellerException;
-import com.store.model.Address;
 import com.store.model.Seller;
-import com.store.repository.AddressRepository;
 import com.store.repository.SellerRepository;
 import com.store.service.SellerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -22,35 +18,11 @@ public class SellerServiceImpl implements SellerService {
 
     private final SellerRepository sellerRepository;
     private final JwtProvider jwtProvider;
-    private final PasswordEncoder passwordEncoder;
-    private final AddressRepository addressRepository;
 
     @Override
     public Seller getSellerProfile(String jwt) throws SellerException {
         String email = jwtProvider.getEmailFromJwtToken(jwt);
         return this.getSellerByEmail(email);
-    }
-
-    @Override
-    public Seller createSeller(Seller seller) throws Exception {
-        Seller sellerExist = sellerRepository.findByEmail(seller.getEmail());
-        if (sellerExist != null) {
-            throw new Exception("Seller already exists. Use another email");
-        }
-        Address savedAddress = addressRepository.save(seller.getPickupAddress());
-
-        Seller newSeller = new Seller();
-        newSeller.setEmail(seller.getEmail());
-        newSeller.setPassword(passwordEncoder.encode(seller.getPassword()));
-        newSeller.setSellerName(seller.getSellerName());
-        newSeller.setPickupAddress(savedAddress);
-        newSeller.setGSTIN(seller.getGSTIN());
-        newSeller.setRole(USER_ROLE.ROLE_SELLER);
-        newSeller.setMobile(seller.getMobile());
-        newSeller.setBankDetails(seller.getBankDetails());
-        newSeller.setBusinessDetails(seller.getBusinessDetails());
-
-        return sellerRepository.save(newSeller);
     }
 
     @Override
@@ -125,13 +97,6 @@ public class SellerServiceImpl implements SellerService {
     public void deleteSeller(Long id) throws Exception {
         Seller seller = getSellerById(id);
         sellerRepository.delete(seller);
-    }
-
-    @Override
-    public Seller verifyEmail(String email, String otp) throws Exception {
-        Seller seller = getSellerByEmail(email);
-        seller.setEmailVerified(true);
-        return sellerRepository.save(seller);
     }
 
     @PreAuthorize("hasRole('ADMIN')")

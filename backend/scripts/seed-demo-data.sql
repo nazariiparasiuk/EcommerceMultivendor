@@ -2,9 +2,9 @@
 -- 3 departments / 26 categories, 4 sellers, 68 products (4 per leaf category, matching Unsplash photos),
 -- 1 admin + 3 customers, and the "Deals this week" rows.
 --
--- Login is OTP-based: request a code on the login page, then read it from the
--- verification_code table (demo accounts use @example.com, which receives no mail).
--- Sellers log in with the "seller_" prefix handled by the backend.
+-- Every demo account (admin, customers and sellers) signs in with the password: sellway123
+-- Customers and the admin use /login, sellers use /seller-login. Customer and seller demo emails
+-- are @example.com and receive no mail; with AUTH_LOG_CODES=true the backend logs sign-up and reset codes.
 --
 -- Usage (from backend/): mysql -u<user> -p <database> < scripts/seed-demo-data.sql
 -- Product created_at values are relative to load time, so the newest items span every department.
@@ -73,24 +73,24 @@ INSERT INTO address (id, name, address, city, state, pin_code, mobile) VALUES
 INSERT INTO seller (id, email, seller_name, mobile, password, role, is_email_verified, account_status,
   business_name, business_email, business_mobile, business_address, gstin,
   account_holder_name, account_number, ifsc_code, pickup_address_id) VALUES
-  (1, 'threadline@example.com', 'Oliver Grant', '+1 415 555 0101', '$2a$10$qHV/hbvQ2wM1u0WNSN5os.QXECJlC2P3/MwEakln8O.F0vuwNFvq2', 2, b'1', 1,
+  (1, 'threadline@example.com', 'Oliver Grant', '+1 415 555 0101', '$2a$10$4jo8G9R0WmNrWf8S5oYfhOD1uMQcrprE4/iz5cB1sAOPuS4Hwgj5W', 2, b'1', 1,
    'Threadline Menswear', 'hello@threadline.example.com', '+1 415 555 0101', '120 Market St, San Francisco, CA 94105', 'US-TX-4815162342',
    'Oliver Grant', '000123456789', 'THRD0001234', 1),
-  (2, 'maplemuse@example.com', 'Sofia Reyes', '+1 312 555 0147', '$2a$10$qHV/hbvQ2wM1u0WNSN5os.QXECJlC2P3/MwEakln8O.F0vuwNFvq2', 2, b'1', 1,
+  (2, 'maplemuse@example.com', 'Sofia Reyes', '+1 312 555 0147', '$2a$10$4jo8G9R0WmNrWf8S5oYfhOD1uMQcrprE4/iz5cB1sAOPuS4Hwgj5W', 2, b'1', 1,
    'Maple & Muse', 'studio@maplemuse.example.com', '+1 312 555 0147', '48 W Division St, Chicago, IL 60610', 'US-IL-2718281828',
    'Sofia Reyes', '000987654321', 'MAPL0005678', 2),
-  (3, 'circuitcorner@example.com', 'Daniel Kim', '+1 206 555 0199', '$2a$10$qHV/hbvQ2wM1u0WNSN5os.QXECJlC2P3/MwEakln8O.F0vuwNFvq2', 2, b'1', 1,
+  (3, 'circuitcorner@example.com', 'Daniel Kim', '+1 206 555 0199', '$2a$10$4jo8G9R0WmNrWf8S5oYfhOD1uMQcrprE4/iz5cB1sAOPuS4Hwgj5W', 2, b'1', 1,
    'Circuit Corner', 'support@circuitcorner.example.com', '+1 206 555 0199', '2200 Western Ave, Seattle, WA 98121', 'US-WA-3141592653',
    'Daniel Kim', '000555123987', 'CIRC0009012', 3),
-  (4, 'johnsfurniture@example.com', 'John Miller', '+1 512 555 0163', '$2a$10$qHV/hbvQ2wM1u0WNSN5os.QXECJlC2P3/MwEakln8O.F0vuwNFvq2', 2, b'1', 1,
+  (4, 'johnsfurniture@example.com', 'John Miller', '+1 512 555 0163', '$2a$10$4jo8G9R0WmNrWf8S5oYfhOD1uMQcrprE4/iz5cB1sAOPuS4Hwgj5W', 2, b'1', 1,
    'John''s Furniture', 'orders@johnsfurniture.example.com', '+1 512 555 0163', '901 E 6th St, Austin, TX 78702', 'US-TX-1618033988',
    'John Miller', '000444777111', 'JOHN0003456', 4);
 
 INSERT INTO user (id, email, full_name, mobile, password, role) VALUES
-  (1, 'digitalhandovertest@gmail.com', 'Admin', '+1 000 555 0000', '$2a$10$qHV/hbvQ2wM1u0WNSN5os.QXECJlC2P3/MwEakln8O.F0vuwNFvq2', 1),
-  (2, 'emma.wilson@example.com', 'Emma Wilson', '+1 646 555 0112', '$2a$10$qHV/hbvQ2wM1u0WNSN5os.QXECJlC2P3/MwEakln8O.F0vuwNFvq2', 0),
-  (3, 'liam.carter@example.com', 'Liam Carter', '+1 617 555 0178', '$2a$10$qHV/hbvQ2wM1u0WNSN5os.QXECJlC2P3/MwEakln8O.F0vuwNFvq2', 0),
-  (4, 'ava.johnson@example.com', 'Ava Johnson', '+1 303 555 0134', '$2a$10$qHV/hbvQ2wM1u0WNSN5os.QXECJlC2P3/MwEakln8O.F0vuwNFvq2', 0);
+  (1, 'digitalhandovertest@gmail.com', 'Admin', '+1 000 555 0000', '$2a$10$4jo8G9R0WmNrWf8S5oYfhOD1uMQcrprE4/iz5cB1sAOPuS4Hwgj5W', 1),
+  (2, 'emma.wilson@example.com', 'Emma Wilson', '+1 646 555 0112', '$2a$10$4jo8G9R0WmNrWf8S5oYfhOD1uMQcrprE4/iz5cB1sAOPuS4Hwgj5W', 0),
+  (3, 'liam.carter@example.com', 'Liam Carter', '+1 617 555 0178', '$2a$10$4jo8G9R0WmNrWf8S5oYfhOD1uMQcrprE4/iz5cB1sAOPuS4Hwgj5W', 0),
+  (4, 'ava.johnson@example.com', 'Ava Johnson', '+1 303 555 0134', '$2a$10$4jo8G9R0WmNrWf8S5oYfhOD1uMQcrprE4/iz5cB1sAOPuS4Hwgj5W', 0);
 
 INSERT INTO cart (user_id, coupon_code, discount, total_items, total_mrp_price, total_selling_price) VALUES
   (2, NULL, 0, 0, 0, 0),
