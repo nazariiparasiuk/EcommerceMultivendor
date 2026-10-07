@@ -16,7 +16,6 @@ import { Reviews } from '@mui/icons-material';
 import BecomeSeller from './customer/pages/Become Seller/BecomeSeller';
 import SellerDashboard from './seller/pages/SellerDashboard/SellerDashboard';
 import AdminDashboard from './admin/Pages/Dashboard/AdminDashboard';
-import { fetchProducts } from './State/fetchProduct';
 import store, { useAppDispatch, useAppSelector } from './State/Store';
 import { fetchSellerProfile } from './State/seller/sellerSlice';
 import { fetchUserProfile } from './State/AuthSlice';
