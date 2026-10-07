@@ -20,12 +20,16 @@ import org.springframework.web.cors.CorsConfigurationSource;
 
 import javax.crypto.SecretKey;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 public class AppConfig  {
+
+    @Value("${app.cors.allowed-origins}")
+    private String allowedOrigins;
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http, SecretKey jwtSigningKey) throws Exception {
@@ -56,7 +60,10 @@ public class AppConfig  {
             @Override
             public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
                 CorsConfiguration cfg = new CorsConfiguration();
-                cfg.setAllowedOrigins(Collections.singletonList("http://localhost:3000/"));
+                cfg.setAllowedOriginPatterns(Arrays.stream(allowedOrigins.split(","))
+                        .map(String::trim)
+                        .filter(origin -> !origin.isEmpty())
+                        .toList());
                 cfg.setAllowedMethods(Collections.singletonList("*"));
                 cfg.setAllowedHeaders(Collections.singletonList("*"));
                 cfg.setAllowCredentials(true);
@@ -65,7 +72,6 @@ public class AppConfig  {
                 return cfg;
             }
         };
-//        return null;
     }
 
     @Bean
