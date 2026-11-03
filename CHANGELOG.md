@@ -8,10 +8,26 @@ Versions follow [Semantic Versioning](https://semver.org/).
 The first release after the tutorial baseline. It turns the storefront into
 **Sellway**: a real, admin-managed category tree drives navigation, search,
 filters and the homepage, and the customer-facing UI is rebranded end to end.
-It also restores three security fixes that were missing from `main` in 1.0.
+It also closes six security holes found in the tutorial code: three fixed
+early and already shipped in the 1.0 tag, and three that were missing from
+`main` in 1.0.
 
 ### Security
 
+- **Sprint 1 data-exposure fixes (EMV-1, EMV-5, EMV-6).** Planned and closed
+  in the 1.1 sprint; the code was merged early and is already part of the
+  1.0.0 tag:
+  - **EMV-1 — Seller passwords and bank details no longer leak.** The public
+    `GET /sellers` and `GET /sellers/{id}` returned every seller's BCrypt
+    password hash and bank account details to anyone, without a token. Seller
+    endpoints now respond with a `SellerResponse` DTO that leaves both out,
+    and `Seller.password` is write-only.
+  - **EMV-5 — Order cancellation check fixed.** The ownership check was
+    inverted: owners could not cancel their own orders, while any other
+    signed-in user could cancel them. Now only the owner can.
+  - **EMV-6 — Orders are private (IDOR fixed).** Any signed-in user could read
+    someone else's order or order item (address, items, totals) by iterating
+    ids. Both endpoints now allow only the owner or an admin.
 - **Security fixes restored on `main` (EMV-2, EMV-3, EMV-4).** These were
   merged into `main` by mistake in PR #3 and reverted there, then landed
   properly via `develop`. The 1.0 merge kept the reverts, so 1.0 shipped
@@ -89,6 +105,9 @@ It also restores three security fixes that were missing from `main` in 1.0.
   every product; the header was a hardcoded "women sarees".
 - **EMV-36** — Sorting and pagination never triggered a new request, and the
   page count was hardcoded to 10.
+- **EMV-24** — Homepage category tiles looked clickable but did nothing.
+  The new Departments tiles and subcategory pills (EMV-27) open the
+  matching category page.
 - **EMV-26** — The mega-menu closed while moving the cursor from a
   department link into it.
 - **EMV-27** — Horizontal scrolling on phones caused by the search field.
@@ -132,7 +151,9 @@ It also restores three security fixes that were missing from `main` in 1.0.
 
 ## [1.0.0] — 2026-09-17
 
-Baseline: the application as completed in the tutorial, plus:
+Baseline: the application as completed in the tutorial, plus three security
+fixes from the 1.1 sprint that were merged early. They are tracked in Jira
+under 1.1.0 and described there:
 
 - **EMV-1** — Seller responses no longer expose the password hash or bank
   details.
