@@ -1,7 +1,6 @@
 package com.store.config;
 
 import io.jsonwebtoken.security.Keys;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,7 +18,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 
 import javax.crypto.SecretKey;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 
@@ -39,7 +37,7 @@ public class AppConfig  {
                 .requestMatchers("/api/products/*/reviews").permitAll()
                 .requestMatchers(HttpMethod.DELETE, "/sellers/{id}").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.PATCH, "/sellers").authenticated()
-                .requestMatchers("/admin/deals/**").hasRole("ADMIN")
+                .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/sellers/products/**").hasRole("SELLER")
                 .requestMatchers(HttpMethod.GET, "/api/categories").permitAll()
                 .requestMatchers("/api/**").authenticated()
@@ -56,21 +54,18 @@ public class AppConfig  {
     }
 
     private CorsConfigurationSource corsConfigurationSource() {
-        return new CorsConfigurationSource() {
-            @Override
-            public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
-                CorsConfiguration cfg = new CorsConfiguration();
-                cfg.setAllowedOriginPatterns(Arrays.stream(allowedOrigins.split(","))
-                        .map(String::trim)
-                        .filter(origin -> !origin.isEmpty())
-                        .toList());
-                cfg.setAllowedMethods(Collections.singletonList("*"));
-                cfg.setAllowedHeaders(Collections.singletonList("*"));
-                cfg.setAllowCredentials(true);
-                cfg.setExposedHeaders(Collections.singletonList("Authorization"));
-                cfg.setMaxAge(3600L);
-                return cfg;
-            }
+        return request -> {
+            CorsConfiguration cfg = new CorsConfiguration();
+            cfg.setAllowedOriginPatterns(Arrays.stream(allowedOrigins.split(","))
+                    .map(String::trim)
+                    .filter(origin -> !origin.isEmpty())
+                    .toList());
+            cfg.setAllowedMethods(Collections.singletonList("*"));
+            cfg.setAllowedHeaders(Collections.singletonList("*"));
+            cfg.setAllowCredentials(true);
+            cfg.setExposedHeaders(Collections.singletonList("Authorization"));
+            cfg.setMaxAge(3600L);
+            return cfg;
         };
     }
 

@@ -9,7 +9,6 @@ import com.store.service.HomeCategoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -18,27 +17,6 @@ public class HomeCategoryServiceImpl implements HomeCategoryService {
 
     private final HomeCategoryRepository homeCategoryRepository;
     private final CategoryRepository categoryRepository;
-
-    @Override
-    public List<HomeCategory> createCategories(List<HomeCategoryRequest> homeCategories) throws Exception {
-        if(homeCategoryRepository.findAll().isEmpty()) {
-            List<HomeCategory> categories = new ArrayList<>();
-            for(HomeCategoryRequest req : homeCategories) {
-                Category category = categoryRepository.findByCategoryId(req.getCategory());
-                if(category == null) {
-                    throw new Exception("Category not found with categoryId " + req.getCategory());
-                }
-                HomeCategory homeCategory = new HomeCategory();
-                homeCategory.setName(req.getName());
-                homeCategory.setImage(req.getImage());
-                homeCategory.setCategory(category);
-                homeCategory.setSection(req.getSection());
-                categories.add(homeCategory);
-            }
-            return homeCategoryRepository.saveAll(categories);
-        }
-        return homeCategoryRepository.findAll();
-    }
 
     @Override
     public HomeCategory updateCategory(HomeCategoryRequest category, Long id) throws Exception {
