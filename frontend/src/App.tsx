@@ -21,8 +21,7 @@ import { fetchSellerProfile } from './State/seller/sellerSlice';
 import { fetchUserProfile } from './State/AuthSlice';
 import PaymentSuccess from './customer/pages/PaymentSuccess';
 import Wishlist from './customer/wishlist/Wishlist';
-import { createHomeCategories } from './State/customer/customerSlice';
-import { homeCategories } from './data/homeCategories';
+import { fetchHomePageData } from './State/customer/customerSlice';
 import SearchResults from './customer/pages/Search/SearchResult';
 import { fetchCategories } from './State/customer/categorySlice';
 import Footer from './customer/components/Footer/Footer';
@@ -46,7 +45,7 @@ function App() {
     if (jwt) {
       dispatch(fetchSellerProfile(jwt));
     }
-    dispatch(createHomeCategories(homeCategories));
+    dispatch(fetchHomePageData());
     dispatch(fetchCategories());
   }, []);
 

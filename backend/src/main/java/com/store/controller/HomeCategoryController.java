@@ -6,7 +6,6 @@ import com.store.request.HomeCategoryRequest;
 import com.store.service.HomeCategoryService;
 import com.store.service.HomeService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,11 +18,9 @@ public class HomeCategoryController {
     private final HomeCategoryService homeCategoryService;
     private final HomeService homeService;
 
-    @PostMapping("/home/categories")
-    public ResponseEntity<Home> createHomeCategories(@RequestBody List<HomeCategoryRequest> homeCategories) throws Exception {
-        List<HomeCategory> categories = homeCategoryService.createCategories(homeCategories);
-        Home home = homeService.createHomePageData(categories);
-        return new ResponseEntity<>(home, HttpStatus.ACCEPTED);
+    @GetMapping("/home")
+    public ResponseEntity<Home> getHomePageData() {
+        return ResponseEntity.ok(homeService.getHomePageData());
     }
 
     @GetMapping("/admin/home-category")

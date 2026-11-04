@@ -1,20 +1,15 @@
-import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
-import axios from 'axios';
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { api } from '../../config/Api';
-import { HomeData, HomeCategory, HomeCategoryRequest } from '../../types/homeCategoryTypes';
+import { HomeData, HomeCategory } from '../../types/homeCategoryTypes';
 
-export const createHomeCategories = createAsyncThunk<HomeData, HomeCategoryRequest[]>(
-  'home/createHomeCategories',
-  async (homeCategories, { rejectWithValue }) => {
+export const fetchHomePageData = createAsyncThunk<HomeData, void, { rejectValue: string }>(
+  'home/fetchHomePageData',
+  async (_, { rejectWithValue }) => {
     try {
-      const response = await api.post('/home/categories', homeCategories);
-      console.log("home categories created ---- ",response.data)
+      const response = await api.get('/home');
       return response.data;
     } catch (error: any) {
-      // Handle the error and return it to be used in rejected action
-      const errorMessage = error.response?.data?.message || error.message || 'Failed to create home categories';
-      console.log("errr ",errorMessage,error)
-      return rejectWithValue(errorMessage);
+      return rejectWithValue(error.response?.data?.error || 'Failed to load the home page.');
     }
   }
 );
@@ -38,18 +33,17 @@ const homeSlice = createSlice({
   initialState,
   reducers: {},
   extraReducers: (builder) => {
-    // Handle createHomeCategories lifecycle
-    builder.addCase(createHomeCategories.pending, (state) => {
+    builder.addCase(fetchHomePageData.pending, (state) => {
       state.loading = true;
       state.error = null;
     });
-    builder.addCase(createHomeCategories.fulfilled, (state, action) => {
+    builder.addCase(fetchHomePageData.fulfilled, (state, action) => {
       state.loading = false;
       state.homePageData = action.payload;
     });
-    builder.addCase(createHomeCategories.rejected, (state, action) => {
+    builder.addCase(fetchHomePageData.rejected, (state, action) => {
       state.loading = false;
-      state.error = action.error.message || 'Failed to create home categories';
+      state.error = action.payload || 'Failed to load the home page.';
     });
   },
 });
