@@ -3,35 +3,66 @@ import StarIcon from '@mui/icons-material/Star';
 import AddIcon from '@mui/icons-material/Add';
 import { Add, AddShoppingCart, FavoriteBorder, LocalShipping, Remove, Shield, Star, Wallet, WorkspacePremium } from '@mui/icons-material';
 import { teal } from '@mui/material/colors';
-import { Button, Divider } from '@mui/material';
+import { Alert, Button, Divider, Snackbar } from '@mui/material';
 import SimilarProduct from './SimilarProduct';
 import Review from '../Review/Review';
 import ReviewCard from '../Review/ReviewCard';
 import { useAppDispatch, useAppSelector } from '../../../State/Store';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { fetchProductById } from '../../../State/customer/ProductSlice';
+import { addItemToCart } from '../../../State/customer/cartSlice';
 
 const ProductDetails = () => {
   const [quantity, setQuantity] = React.useState(1);
   const dispatch = useAppDispatch();
-  const {productId} = useParams();
-  const {product} = useAppSelector(store => store)
+  const navigate = useNavigate();
+  const { productId } = useParams();
+  const { product, auth } = useAppSelector(store => store)
   const [activeImage, setActiveImage] = React.useState(0);
+  const [selectedSize, setSelectedSize] = React.useState('');
+  const [adding, setAdding] = React.useState(false);
+  const [toast, setToast] = React.useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const sizes = (product.product?.sizes || '').split(',').map((size) => size.trim()).filter(Boolean);
 
   useEffect(() => {
     dispatch(fetchProductById(Number(productId)))
-  },[productId])
+  }, [productId])
 
-  const handleActiveImage = (value:number) => () => {
+  useEffect(() => {
+    setSelectedSize(sizes[0] || '');
+  }, [product.product?.id]);
+
+  const handleActiveImage = (value: number) => () => {
     setActiveImage(value)
   }
+  const handleAddToCart = async () => {
+    if (!auth.user) {
+      navigate('/login');
+      return;
+    }
+    if (!product.product?.id) return;
+
+    setAdding(true);
+    try {
+      await dispatch(addItemToCart({
+        jwt: localStorage.getItem('jwt'),
+        request: { productId: product.product.id, size: selectedSize, quantity },
+      })).unwrap();
+      setToast({ type: 'success', text: `Added ${quantity} × ${product.product.title} to your cart` });
+    } catch (error) {
+      setToast({ type: 'error', text: String(error) });
+    } finally {
+      setAdding(false);
+    }
+  };
   return (
     <div className='px-5 lg:px-20 pt-10'>
       <div className='grid grid-cols-1 lg:grid-cols-2 gap-10'>
         <section className='flex flex-col lg:flex-row gap-5'>
           <div className='w-full lg:w-[15%] flex flex=wrap lg:flex-col gap-3'>
-            {product.product?.images.map((item,index) => <img onClick={handleActiveImage(index)} className='lg:w-full w-[50px] cursor-pointer rounded-md'
-            src={item}/>)}
+            {product.product?.images.map((item, index) => <img onClick={handleActiveImage(index)} className='lg:w-full w-[50px] cursor-pointer rounded-md'
+              src={item} />)}
           </div>
           <div className='w-full lg:w-[85%]'>
             <img className='w-full rounded-md' src={product.product?.images[activeImage]}></img>
@@ -43,7 +74,7 @@ const ProductDetails = () => {
           <div className='flex justify-between items-center py-2 border w-[180px] px-3 mt-5'>
             <div className='flex gap-1 items-center'>
               <span>4</span>
-              <StarIcon sx={{color:teal[500],fontSize:"17px"}}/>
+              <StarIcon sx={{ color: teal[500], fontSize: "17px" }} />
             </div>
             <Divider orientation="vertical" flexItem />
             <span>234 Ratings</span>
@@ -65,65 +96,85 @@ const ProductDetails = () => {
 
           <div className='mt-7 space-y-3'>
             <div className='flex items-center gap-4'>
-              <Shield sx={{color:teal[500]}}/>
+              <Shield sx={{ color: teal[500] }} />
               <p>Authentic & Quality Assured</p>
             </div>
 
             <div className='flex items-center gap-4'>
-              <WorkspacePremium sx={{color:teal[500]}}/>
+              <WorkspacePremium sx={{ color: teal[500] }} />
               <p>100% money back guarantee</p>
             </div>
 
             <div className='flex items-center gap-4'>
-              <LocalShipping sx={{color:teal[500]}}/>
+              <LocalShipping sx={{ color: teal[500] }} />
               <p>Free Shipping & Returns</p>
             </div>
 
             <div className='flex items-center gap-4'>
-              <Wallet sx={{color:teal[500]}}/>
+              <Wallet sx={{ color: teal[500] }} />
               <p>Pay on delivery might be avaliable</p>
             </div>
           </div>
+
+          {sizes.length > 0 && (
+            <div className='mt-7 space-y-2'>
+              <h1>SIZE</h1>
+              <div className='flex flex-wrap gap-2'>
+                {sizes.map((size) => (
+                  <button
+                    key={size}
+                    type='button'
+                    onClick={() => setSelectedSize(size)}
+                    className={`min-w-[48px] px-3 py-2 rounded-lg border text-sm font-semibold transition-colors ${selectedSize === size
+                        ? 'border-primary-color bg-primary-color text-white'
+                        : 'border-gray-300 text-gray-700 hover:border-primary-color'
+                      }`}>
+                    {size}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className='mt-7 space-y-2'>
             <h1>
               QUANTITY
             </h1>
             <div className='flex items-center gap-2 w-[140px] justify-between'>
-              <Button disabled={quantity==1} onClick={() => setQuantity(quantity - 1)}>
-                <Remove/>
+              <Button disabled={quantity == 1} onClick={() => setQuantity(quantity - 1)}>
+                <Remove />
               </Button>
               <span>
                 {quantity}
               </span>
               <Button onClick={() => setQuantity(quantity + 1)}>
-                <Add/>
+                <Add />
               </Button>
             </div>
           </div>
 
           <div className='mt-12 flex items-center gap-5'>
-            <Button 
-            fullWidth
-            startIcon={<AddShoppingCart />} 
-            variant='contained'
-            sx={{py:"1rem", 
-              width: {
-                xs: '100%', 
-                sm: '300px',  
-            },}}>
-              Add to Cart
+            <Button
+              fullWidth
+              startIcon={<AddShoppingCart />}
+              variant='contained'
+              onClick={handleAddToCart}
+              disabled={adding || !selectedSize}
+              sx={{ py: "1rem", width: { xs: '100%', sm: '300px' } }}>
+              {adding ? 'Adding…' : 'Add to Cart'}
             </Button>
 
-            <Button 
-            fullWidth
-            startIcon={<FavoriteBorder />} 
-            variant='outlined'
-            sx={{py:"1rem", 
-              width: {
-                xs: '100%', 
-                sm: '300px',  
-            },}}>
+            <Button
+              fullWidth
+              startIcon={<FavoriteBorder />}
+              variant='outlined'
+              sx={{
+                py: "1rem",
+                width: {
+                  xs: '100%',
+                  sm: '300px',
+                },
+              }}>
               Add to Wishlist
             </Button>
           </div>
@@ -136,7 +187,7 @@ const ProductDetails = () => {
 
           <div className='mt-12 space-y-5'>
             <ReviewCard />
-            <Divider/>
+            <Divider />
           </div>
 
         </section>
@@ -150,6 +201,15 @@ const ProductDetails = () => {
           <SimilarProduct />
         </div>
       </div>
+      <Snackbar
+        open={toast !== null}
+        autoHideDuration={3000}
+        onClose={() => setToast(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
+        <Alert onClose={() => setToast(null)} severity={toast?.type || 'success'} variant='filled'>
+          {toast?.text}
+        </Alert>
+      </Snackbar>
     </div>
   )
 }
