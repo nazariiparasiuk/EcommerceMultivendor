@@ -1,10 +1,12 @@
 package com.store.config;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
@@ -17,6 +19,16 @@ import java.util.Set;
 
 @Service
 public class JwtProvider {
+
+    public static final String BEARER_PREFIX = "Bearer ";
+
+    public static String extractBearerToken(String authorizationHeader) {
+        if (authorizationHeader == null || !authorizationHeader.startsWith(BEARER_PREFIX)) {
+            return null;
+        }
+        String token = authorizationHeader.substring(BEARER_PREFIX.length()).trim();
+        return token.isEmpty() ? null : token;
+    }
 
     @Value("${jwt.secret}")
     private String jwtSecret;
@@ -41,11 +53,17 @@ public class JwtProvider {
                 .compact();
     }
 
-    public String getEmailFromJwtToken(String jwt) {
-        jwt=jwt.substring(7);
-
-        Claims claims = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(jwt).getBody();
-        return String.valueOf(claims.get("email"));
+    public String getEmailFromJwtToken(String authorizationHeader) {
+        String token = extractBearerToken(authorizationHeader);
+        if (token == null) {
+            throw new BadCredentialsException("Sign in to continue.");
+        }
+        try {
+            Claims claims = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
+            return String.valueOf(claims.get("email"));
+        } catch (JwtException | IllegalArgumentException e) {
+            throw new BadCredentialsException("Your session has expired. Sign in again.");
+        }
     }
 
     private String populateAuthorities(Collection<? extends GrantedAuthority> authorities) {

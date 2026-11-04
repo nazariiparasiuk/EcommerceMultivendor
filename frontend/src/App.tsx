@@ -42,7 +42,10 @@ function App() {
   const isAuthPage = AUTH_PAGES.includes(location.pathname);
 
   useEffect(() => {
-    dispatch(fetchSellerProfile(localStorage.getItem("jwt") || ""));
+    const jwt = localStorage.getItem("jwt");
+    if (jwt) {
+      dispatch(fetchSellerProfile(jwt));
+    }
     dispatch(createHomeCategories(homeCategories));
     dispatch(fetchCategories());
   }, []);
@@ -54,7 +57,10 @@ function App() {
   }, [seller.profile]);
 
   useEffect(() => {
-    dispatch(fetchUserProfile({jwt: auth.jwt || localStorage.getItem("jwt")}));
+    const jwt = auth.jwt || localStorage.getItem("jwt");
+    if (jwt) {
+      dispatch(fetchUserProfile({jwt}));
+    }
   }, [auth.jwt]);
 
   useEffect(() => {
