@@ -19,27 +19,25 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public CartItem addCartItem(User user, Product product, String size, int quantity) {
-
         Cart cart = findUserCart(user);
-        CartItem isPresent = cartItemRepository.findByCartAndProductAndSize(cart, product, size);
-        if (isPresent == null) {
-            CartItem cartItem = new CartItem();
+        CartItem cartItem = cartItemRepository.findByCartAndProductAndSize(cart, product, size);
+        int newQuantity = quantity;
+
+        if (cartItem == null) {
+            cartItem = new CartItem();
             cartItem.setProduct(product);
-            cartItem.setQuantity(quantity);
             cartItem.setUserId(user.getId());
             cartItem.setSize(size);
-
-            int totalPrice = quantity*product.getSellingPrice();
-            cartItem.setSellingPrice(totalPrice);
-            cartItem.setMrpPrice(quantity*product.getMrpPrice());
-
-            cart.getCartItems().add(cartItem);
             cartItem.setCart(cart);
-
-            return cartItemRepository.save(cartItem);
-
+            cart.getCartItems().add(cartItem);
+        } else {
+            newQuantity += cartItem.getQuantity();
         }
-        return isPresent;
+
+        cartItem.setQuantity(newQuantity);
+        cartItem.setSellingPrice(newQuantity * product.getSellingPrice());
+        cartItem.setMrpPrice(newQuantity * product.getMrpPrice());
+        return cartItemRepository.save(cartItem);
     }
 
     @Override

@@ -48,20 +48,16 @@ interface AddItemRequest {
 
 export const addItemToCart = createAsyncThunk<
   CartItem,
-  { jwt: string | null; request: AddItemRequest }
+  { jwt: string | null; request: AddItemRequest },
+  { rejectValue: string }
 >("cart/addItemToCart", async ({ jwt, request }, { rejectWithValue }) => {
   try {
     const response = await api.put(`${API_URL}/add`, request, {
-      headers: {
-        Authorization: `Bearer ${jwt}`,
-      },
+      headers: { Authorization: `Bearer ${jwt}` },
     });
-
-    console.log("Cart added ", response.data);
     return response.data;
   } catch (error: any) {
-    console.log("error ", error.response);
-    return rejectWithValue("Failed to add item to cart");
+    return rejectWithValue(error.response?.data?.error || "Couldn't add the item to your cart.");
   }
 });
 
@@ -139,7 +135,12 @@ const cartSlice = createSlice({
         addItemToCart.fulfilled,
         (state, action: PayloadAction<CartItem>) => {
           if (state.cart) {
-            state.cart.cartItems.push(action.payload);
+            const index = state.cart.cartItems.findIndex((item) => item.id === action.payload.id);
+            if (index >= 0) {
+              state.cart.cartItems[index] = action.payload;
+            } else {
+              state.cart.cartItems.push(action.payload);
+            }
           }
           state.loading = false;
         }
