@@ -1,6 +1,7 @@
 package com.store.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIncludeProperties;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -32,6 +33,8 @@ public class Review {
     @ManyToOne
     private Product product;
 
+    // Reviews are public: show who wrote it, never their email, phone or addresses.
+    @JsonIncludeProperties({"id", "fullName"})
     @ManyToOne
     private User user;
 

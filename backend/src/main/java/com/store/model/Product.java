@@ -1,5 +1,6 @@
 package com.store.model;
 
+import com.fasterxml.jackson.annotation.JsonIncludeProperties;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -41,6 +42,9 @@ public class Product {
     @ManyToOne
     private Category category;
 
+    // Public product JSON shows only the storefront identity of the seller.
+    // Allow-list on purpose: a field added to Seller later stays private by default.
+    @JsonIncludeProperties({"id", "businessDetails"})
     @ManyToOne
     private Seller seller;
 
