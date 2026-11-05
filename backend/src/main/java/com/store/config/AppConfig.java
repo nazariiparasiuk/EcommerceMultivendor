@@ -39,6 +39,8 @@ public class AppConfig  {
                 .requestMatchers(HttpMethod.PATCH, "/sellers").authenticated()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/sellers/products/**").hasRole("SELLER")
+                .requestMatchers(HttpMethod.GET, "/sellers/profile", "/sellers/report").hasRole("SELLER")
+                .requestMatchers(HttpMethod.GET, "/sellers", "/sellers/{id}").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.GET, "/api/categories").permitAll()
                 .requestMatchers("/api/**").authenticated()
                 .anyRequest().permitAll()
